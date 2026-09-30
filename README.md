@@ -1,56 +1,65 @@
-# Welcome to your Expo app 👋
+# ARC Ride: customer mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native + Expo (SDK 57) + TypeScript app for ARC Car Rental renters. It talks to the Laravel API in
+[`ARC-Car-Rental-Backend`](https://github.com/KimMorilla101/ARC-Car-Rental-Backend) over authenticated HTTPS.
 
-## Get started
+> **Backend status:** the Laravel API has not been built yet. The endpoints the app needs are documented in
+> [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md). Until they exist, run the app in mock mode (below).
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting started
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env.local   # then edit if needed
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The app uses `expo-secure-store`, `expo-image-picker` and `@react-native-community/datetimepicker`, which are all
+included in Expo Go. Use a development build if you add other native modules.
 
-### Other setup steps
+### Environment (`.env.local`)
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Variable | Purpose |
+|---|---|
+| `EXPO_PUBLIC_API_BASE_URL` | Laravel URL including `/api`. Required for production (HTTPS only). Leave empty in development to auto-detect the machine running Metro. |
+| `EXPO_PUBLIC_API_PORT` | Port used for auto-detection (default `8000`). |
+| `EXPO_PUBLIC_USE_MOCK_API` | `true` = temporary in-memory data in `src/services/mock/`. Ignored in release builds. Demo login: `juan@example.com` / `password123`. |
 
-## Learn more
+`EXPO_PUBLIC_*` values are bundled into the app, so never put secrets in them. Base-URL examples for Laragon, the Android
+emulator (`10.0.2.2`), the iOS simulator and physical phones are in `.env.example`. For a phone to reach your
+PC, start Laravel with `php artisan serve --host=0.0.0.0 --port=8000`.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Checks
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npx tsc --noEmit   # typecheck
+npx expo lint      # lint
+npx expo-doctor    # dependency/config health
+```
 
-## Join the community
+## Project structure
 
-Join our community of developers creating universal apps.
+```
+src/
+  app/           Expo Router routes only (thin files that re-export screens)
+    _layout.tsx    providers, error boundary, auth route guards (Stack.Protected)
+    (auth)/        welcome, login, register, forgot-password: signed-out only
+    (app)/         signed-in only: (tabs) + vehicle, booking, profile screens
+    about|contact|faq.tsx   public pages
+  screens/       one component per screen, grouped by feature
+  components/    reusable UI (common/, auth/, dashboard/, vehicles/, booking/, payment/, profile/)
+  services/      api.ts (HTTP client, token, 401 handling) + one *Api.ts per feature
+    mock/          TEMPORARY mock implementations, only used when EXPO_PUBLIC_USE_MOCK_API=true
+  context/       AuthContext (session restore, sign in/out)
+  hooks/         data hooks (useApiQuery, useVehicles, useBookings, useNotifications, ...)
+  types/         API types shared by services and screens
+  utils/         validation, formatters, error handling, file picker, booking dates
+  constants/     theme tokens, API config, endpoint map
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Connecting a real endpoint
+
+1. Set its path in `src/constants/endpoints.ts`. Every entry is `null` until the backend confirms it, and a `null`
+   endpoint shows "Not available yet" instead of calling a guessed URL.
+2. Check that the request and response in the matching `src/services/*Api.ts` still match the confirmed contract.
+3. Once every endpoint is live, delete `src/services/mock/` and the mock switch in each `*Api.ts`.

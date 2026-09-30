@@ -1,65 +1,43 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * ARC Ride design tokens, taken from the Figma-based screens.
+ * Use these instead of hard-coded hex values so the palette stays consistent.
  */
-
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
+export const palette = {
+  navy: '#10213A',
+  navySoft: '#1E3150',
+  navyLine: '#30425E',
+  blue: '#347FF5',
+  blueSoft: '#EAF2FF',
+  blueTint: '#F0F6FF',
+  ink: '#18263B',
+  muted: '#718098',
+  mutedLight: '#9BA8BB',
+  placeholder: '#8B9AB0',
+  label: '#63758F',
+  line: '#DCE5F0',
+  border: '#E8EDF4',
+  divider: '#EEF1F5',
+  canvas: '#F6F8FC',
+  white: '#FFFFFF',
+  green: '#10A979',
+  greenSoft: '#E3F8F0',
+  amber: '#A96800',
+  amberText: '#8B6D39',
+  amberSoft: '#FFF7E8',
+  amberStrong: '#C9811A',
+  star: '#E69A24',
+  danger: '#D65B65',
+  dangerSoft: '#FDECEE',
+  disabled: '#B8C4D4',
+  skeleton: '#E4EAF2',
+  onNavyMuted: '#A9B7CA',
+  onNavyAccent: '#93B9F5',
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export const radius = { sm: 9, md: 13, lg: 16, xl: 18, pill: 20 } as const;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+/** Horizontal page gutter used by every scrolling screen. */
+export const gutter = 20;
 
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+/** Height of the custom bottom tab bar, excluding the device safe-area inset. */
+export const tabBarHeight = 68;

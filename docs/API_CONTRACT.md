@@ -45,7 +45,7 @@ you can set `EXPO_PUBLIC_USE_MOCK_API=true` to use the temporary in-memory mocks
 | Key | Proposed | Request | Success response |
 |---|---|---|---|
 | `auth.login` (public, throttled) | `POST /auth/login` | `{ email, password, device_name }` | `200 { token, user: User }` |
-| `auth.register` (public, throttled) | `POST /auth/register` | `{ name, email, password, password_confirmation, device_name }` | `201 { token, user: User }` |
+| `auth.register` (public, throttled) | `POST /auth/register` | `{ name, email, phone, password, password_confirmation, device_name }` | `201 { token, user: User }` |
 | `auth.logout` | `POST /auth/logout` | none | `204`. Revoke **only the current** token. |
 | `auth.me` | `GET /user` | none | `{ data: User }` |
 | `auth.forgotPassword` (public, throttled) | `POST /auth/forgot-password` | `{ email }` | `200`. Must not reveal whether the email exists. The reset itself happens via Laravel's emailed link. |
@@ -66,11 +66,11 @@ The email address is read-only in the app.
 
 | Key | Proposed | Request | Success response |
 |---|---|---|---|
-| `vehicles.list` | `GET /vehicles` | query: `search, category, transmission, fuel, min_seats, max_daily_rate, available_only, pickup_at, return_at, sort` (all optional) | `{ data: Vehicle[] }` |
+| `vehicles.list` | `GET /vehicles` | query: `search, category, transmission, fuel, min_seats, max_daily_rate, available_only, pickup_at, return_at, sort` (all optional) | `{ data: Vehicle[], meta: { fleet_size } }` (`fleet_size` = whole fleet, for "Showing 4 of 10") |
 | `vehicles.show` | `GET /vehicles/{id}` | none | `{ data: Vehicle }` |
-| `vehicles.homeFeed` | `GET /vehicles/home-feed` | none | `{ data: { recommended: Vehicle[], popular: Vehicle[], new_arrivals: Vehicle[] } }` |
+| `vehicles.homeFeed` | `GET /vehicles/home-feed` | none | `{ data: { featured: Vehicle[], recommended: Vehicle[] } }` |
 
-`sort` is one of `recommended | price_asc | price_desc | rating | seats`. When `pickup_at` and `return_at` are both
+`sort` is one of `recommended | price_asc | price_desc | popular | rating`. When `pickup_at` and `return_at` are both
 sent, `available_units` must count only units free for that window.
 
 ### Bookings
@@ -79,9 +79,10 @@ sent, `available_units` must count only units free for that window.
 |---|---|---|---|
 | `bookings.list` | `GET /bookings` | query `status` = `upcoming \| active \| completed \| cancelled` (omit for all) | `{ data: Booking[] }`, the current user's bookings only |
 | `bookings.show` | `GET /bookings/{id}` | none | `{ data: Booking }`. Return 404 if it belongs to someone else. |
-| `bookings.quote` | `POST /bookings/quote` | `{ vehicle_id, pickup_at, return_at, delivery_method, delivery_address \| null }` | `{ data: BookingQuote }`. Nothing is saved. |
+| `bookings.locations` | `GET /booking-locations` | none | `{ data: { branches: Branch[], delivery_zones: DeliveryZone[] } }` |
+| `bookings.quote` | `POST /bookings/quote` | `{ vehicle_id, pickup_at, return_at, delivery_method, branch_id \| null, delivery_zone_id \| null, delivery_address \| null }` | `{ data: BookingQuote }`. Nothing is saved. |
 | `bookings.create` | `POST /bookings` | quote fields + `{ destination, payment_method, agreement_version, agreement_accepted: true }` | `201 { data: Booking }` with status `pending` |
-| `bookings.agreement` | `GET /rental-agreement` | none | `{ data: { version, title, clauses: string[] } }` |
+| `bookings.agreement` | `GET /rental-agreement` | none | `{ data: { version, title, sections: [{ title, body }] } }` |
 | `bookings.uploadRequirement` | `POST /bookings/{id}/requirements` | multipart `type` + `file` | `{ data: Booking }` with that requirement now `pending_verification` |
 
 Filter mapping for `status`: upcoming = `pending, pending_verification, confirmed`; active = `active, return_due`;
@@ -104,7 +105,7 @@ Uploaded proof must **never** confirm a booking automatically. Only ARC staff ve
 | Key | Proposed | Request | Success response |
 |---|---|---|---|
 | `rentals.extensionOptions` | `GET /bookings/{id}/extension-options` | none | `{ data: ExtensionOptions }` |
-| `rentals.requestExtension` | `POST /bookings/{id}/extensions` | `{ type: hourly \| daily \| monthly }` | `{ data: Booking }` with `extension.status = pending` |
+| `rentals.requestExtension` | `POST /bookings/{id}/extensions` | `{ type: hourly \| daily \| monthly, quantity }` | `{ data: Booking }` with `extension.status = pending` |
 | `rentals.returnSummary` | `GET /bookings/{id}/return-summary` | none | `{ data: ReturnSummary }` |
 
 `requestExtension` must return **422** once the fixed return time has passed. The app's check is only a hint.
@@ -137,26 +138,26 @@ Shown in snake_case (as Laravel sends them). TypeScript versions live in `src/ty
   "address": "Davao City", "avatar_url": null, "trust_score": 92 }          // trust_score: 0-100 or null
 
 // Vehicle  (src/types/vehicle.ts)
-{ "id": 3, "name": "Honda BR-V", "category": "SUV",                        // SUV|Sedan|MPV|Hatchback|Pickup
+{ "id": 1, "name": "Toyota Camry 2024", "category": "Sedan",               // Sedan|SUV|MPV|Pickup|Luxury|Hatchback
   "rates": { "hourly": 320, "daily": 2500, "monthly": 50000 },
   "image_url": "https://...", "gallery": ["https://..."],
   "seats": 7, "doors": 4, "transmission": "Automatic", "fuel": "Gasoline", // Automatic|Manual ; Gasoline|Diesel|Hybrid|Electric
-  "rating": 4.8, "description": "...", "features": ["7 seats", "Apple CarPlay"],
+  "rating": 4.8, "review_count": 124, "is_popular": true, "description": "...", "features": ["Apple CarPlay"],
   "available_units": 1, "match_score": 92 }                                // match_score: 0-100 or null
 
 // Booking  (src/types/booking.ts)
-{ "id": 101, "reference": "ARC-260924-08", "vehicle": { /* Vehicle */ }, "unit_label": "Honda BR-V Unit 01",
-  "pickup_at": "2026-09-28T09:00:00+08:00", "return_at": "2026-10-01T09:00:00+08:00",
-  "delivery_method": "shop_pickup", "pickup_location": "ARC Car Rental shop, Davao City",
+{ "id": 891, "reference": "BK-2026-0891", "vehicle": { /* Vehicle */ }, "unit_label": "Honda BR-V Unit 01",
+  "pickup_at": "2026-09-28T09:00:00+08:00", "return_at": "2026-10-01T09:00:00+08:00", "rental_days": 3,
+  "delivery_method": "shop_pickup", "pickup_location": "ARC Davao City Branch – Ecoland Drive (Main)",  // branch name or delivery address
   "delivery_address": null, "destination": "Samal Island",
   "status": "active",   // pending|pending_verification|confirmed|active|return_due|returned|completed|cancelled
   "payment": { "method": "cash", "status": "paid", "proof_url": null },
       // method: online|bank_transfer|cash ; status: awaiting_payment|pending_verification|verified|paid|rejected
-  "pricing": { "rental_fee": 7500, "delivery_fee": 0, "car_wash_fee": 500, "late_return_fee": 0,
-               "extension_fee": 0, "down_payment": 1000, "total": 8000 },
+  "pricing": { "rental_fee": 7500, "delivery_fee": 0, "car_wash_fee": 350, "late_return_fee": 0,
+               "extension_fee": 0, "total": 7850, "down_payment": 1000, "balance_due": 6850 },
   "requirements": [ { "type": "drivers_license", "label": "Driver's License", "description": "...",
                       "status": "verified", "rejection_reason": null } ],
-      // type: drivers_license|proof_of_billing|valid_id|down_payment ; status: missing|pending_verification|verified|rejected
+      // type: drivers_license|valid_id|proof_of_billing|down_payment ; status: missing|pending_verification|verified|rejected
   "extension": null,    // or Extension
   "can_request_extension": true,
   "trust_score": 92, "created_at": "2026-09-25T14:00:00+08:00" }
@@ -167,17 +168,21 @@ Shown in snake_case (as Laravel sends them). TypeScript versions live in `src/ty
 
 // PaymentMethodOption
 { "method": "bank_transfer", "label": "Bank Transfer", "description": "...", "requires_proof": true,
-  "instructions": "BPI 1234-5678-90, ARC Car Rental" }
+  "accounts": [ { "provider": "BPI", "account_name": "ARC Car Rental Services", "account_number": "1234-5678-90" } ] }  // empty for cash
+
+// Branch and DeliveryZone (GET /booking-locations)
+{ "id": 1, "name": "ARC Davao City Branch – Ecoland Drive (Main)", "address": "Ecoland Drive, Matina, Davao City" }
+{ "id": 3, "name": "Panabo / Tagum", "fee": 900 }
 
 // Extension
-{ "id": 5, "type": "daily", "requested_return_at": "...", "fee": 2500, "status": "pending", "created_at": "..." }
+{ "id": 5, "type": "daily", "quantity": 2, "requested_return_at": "...", "fee": 5000, "status": "pending", "created_at": "..." }
 // ExtensionOptions
 { "deadline": "...", "current_return_at": "...",
-  "options": [ { "type": "daily", "duration_label": "1 day", "fee": 2500, "requested_return_at": "..." } ] }
+  "options": [ { "type": "daily", "unit_fee": 2500, "unit_label": "day", "max_quantity": 14 } ] }
 
 // ReturnSummary
-{ "scheduled_return_at": "...", "delayed_hours": 2, "late_fee_per_hour": 500, "estimated_late_fee": 1000,
-  "shop_address": "ARC Car Rental shop, Davao City" }
+{ "scheduled_return_at": "...", "delayed_hours": 2, "late_fee_per_hour": 300, "estimated_late_fee": 600,
+  "return_location": "ARC SM Lanang Branch" }
 
 // AppNotification
 { "id": 3, "type": "rental",  // booking|payment|rental|extension|late_return|general
@@ -191,7 +196,7 @@ Shown in snake_case (as Laravel sends them). TypeScript versions live in `src/ty
 The app shows these but never decides them:
 
 - **Fixed return time**: the return time equals the pickup time of day. Reject bookings that break this.
-- **Pricing**: rental fee, delivery fee (distance-based), fixed car wash fee, ₱1,000 down payment, extension and late-return fees. The app only displays `pricing` from quotes and bookings.
+- **Pricing**: rental fee, delivery fee (per delivery zone), fixed car wash fee, ₱1,000 down payment, extension and late-return fees. The app only displays `pricing` from quotes and bookings.
 - **Availability and unit assignment**: prevent double-booking when creating a booking or approving an extension.
 - **Status transitions**, including `return_due` once `return_at` passes with the car still out, and `can_request_extension`.
 - **Verification**: documents and payment proof stay pending until staff approve them. Nothing auto-confirms.
@@ -212,7 +217,7 @@ The app shows these but never decides them:
 - [ ] auth.login · [ ] auth.register · [ ] auth.logout · [ ] auth.me · [ ] auth.forgotPassword
 - [ ] profile.update · [ ] profile.avatar · [ ] profile.password
 - [ ] vehicles.list · [ ] vehicles.show · [ ] vehicles.homeFeed
-- [ ] bookings.list · [ ] bookings.show · [ ] bookings.quote · [ ] bookings.create · [ ] bookings.agreement · [ ] bookings.uploadRequirement
+- [ ] bookings.list · [ ] bookings.show · [ ] bookings.locations · [ ] bookings.quote · [ ] bookings.create · [ ] bookings.agreement · [ ] bookings.uploadRequirement
 - [ ] payments.methods · [ ] payments.uploadProof
 - [ ] rentals.extensionOptions · [ ] rentals.requestExtension · [ ] rentals.returnSummary
 - [ ] notifications.list · [ ] notifications.markRead · [ ] notifications.markAllRead

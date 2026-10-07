@@ -33,6 +33,7 @@ export const ENDPOINTS = {
     list: null as Endpoint,
     show: null as Endpoint,
     create: null as Endpoint,
+    locations: null as Endpoint,
     quote: null as Endpoint,
     agreement: null as Endpoint,
     uploadRequirement: null as Endpoint,

@@ -1,98 +1,90 @@
 import { useRef, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
-import { PrimaryButton } from '@/components/common/PrimaryButton';
-import { gutter, palette } from '@/constants/theme';
+import { Card } from '@/components/common/Card';
+import { Checkbox } from '@/components/common/Checkbox';
+import { Icon } from '@/components/common/Icon';
+import { palette } from '@/constants/theme';
 import type { RentalAgreement } from '@/types/booking';
 
+import { styles } from './AgreementSection.styles';
+
 interface AgreementSectionProps {
-  agreement: RentalAgreement | undefined;
+  agreement: RentalAgreement;
   accepted: boolean;
-  onAccept: () => void;
+  onAcceptedChange: (accepted: boolean) => void;
   error?: string | null;
 }
 
 /**
- * Rental agreement card. The renter must open the agreement and scroll to the end before
- * "I Agree" is enabled; the accepted version is sent with the booking so Laravel can record it.
+ * Inline, scrollable rental agreement. "I agree" stays locked until the renter scrolls to the end;
+ * the accepted version is sent with the booking so Laravel can record exactly what was agreed to.
  */
-export function AgreementSection({ agreement, accepted, onAccept, error }: AgreementSectionProps) {
-  const [open, setOpen] = useState(false);
+export function AgreementSection({ agreement, accepted, onAcceptedChange, error }: AgreementSectionProps) {
   const [reachedEnd, setReachedEnd] = useState(false);
   const viewportHeight = useRef(0);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 24) setReachedEnd(true);
+    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 20) setReachedEnd(true);
   };
 
   return (
-    <View style={[styles.card, error ? styles.cardError : null]}>
-      <Text style={[styles.text, accepted && styles.accepted]}>
-        {accepted ? '✓ You accepted the ARC Car Rental Agreement.' : 'Open and scroll through the ARC Car Rental Agreement before accepting it.'}
-      </Text>
-      <PrimaryButton
-        label={!agreement ? 'Loading agreement…' : accepted ? 'Review agreement again' : 'Open rental agreement'}
-        variant="outline"
-        disabled={!agreement}
-        onPress={() => setOpen(true)}
-        style={styles.button}
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+    <View>
+      <Card
+        title="Rental Agreement"
+        icon="file-text"
+        right={
+          <View style={styles.readState}>
+            <Icon name={reachedEnd ? 'check-circle' : 'alert-circle'} size={13} color={reachedEnd ? palette.green : palette.amberStrong} />
+            <Text style={[styles.readText, reachedEnd && styles.readDone]}>{reachedEnd ? 'Read' : 'Scroll to read'}</Text>
+          </View>
+        }>
+        <ScrollView
+          style={styles.box}
+          contentContainerStyle={styles.boxContent}
+          nestedScrollEnabled
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          onLayout={(event) => {
+            viewportHeight.current = event.nativeEvent.layout.height;
+          }}
+          onContentSizeChange={(_width, height) => {
+            // An agreement short enough to fit without scrolling counts as read.
+            if (viewportHeight.current > 0 && height <= viewportHeight.current) setReachedEnd(true);
+          }}>
+          <Text style={styles.docTitle}>{agreement.title}</Text>
+          <Text style={styles.docIntro}>Effective upon booking confirmation. Read carefully before accepting.</Text>
+          {agreement.sections.map((section) => (
+            <View key={section.title} style={styles.section}>
+              <Text style={styles.sectionTitle}>{section.title.toUpperCase()}</Text>
+              <Text style={styles.sectionBody}>{section.body}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </Card>
 
-      <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
-        <SafeAreaView style={styles.modal}>
-          <Text style={styles.modalTitle}>{agreement?.title}</Text>
-          <ScrollView
-            style={styles.modalScroll}
-            contentContainerStyle={styles.modalContent}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-            onLayout={(event) => {
-              viewportHeight.current = event.nativeEvent.layout.height;
-            }}
-            onContentSizeChange={(_width, height) => {
-              // An agreement short enough to fit without scrolling counts as read.
-              if (viewportHeight.current > 0 && height <= viewportHeight.current) setReachedEnd(true);
-            }}>
-            {agreement?.clauses.map((clause, index) => (
-              <View key={clause} style={styles.clause}>
-                <Text style={styles.clauseNumber}>{String(index + 1).padStart(2, '0')}</Text>
-                <Text style={styles.clauseText}>{clause}</Text>
-              </View>
-            ))}
-            <Text style={styles.end}>{reachedEnd ? 'End of agreement.' : 'Scroll to the end to enable acceptance.'}</Text>
-          </ScrollView>
-          <PrimaryButton
-            label={reachedEnd ? 'I Agree' : 'Scroll to review agreement'}
-            disabled={!reachedEnd}
-            onPress={() => {
-              onAccept();
-              setOpen(false);
-            }}
-          />
-          <PrimaryButton label="Close" variant="ghost" onPress={() => setOpen(false)} style={styles.close} />
-        </SafeAreaView>
-      </Modal>
+      <View style={[styles.acceptCard, error ? styles.acceptError : null]}>
+        <Checkbox
+          checked={accepted}
+          disabled={!reachedEnd}
+          onChange={onAcceptedChange}
+          accessibilityLabel="I have read and agree to the ARC Ride Rental Agreement"
+          label={
+            <Text style={styles.acceptText}>
+              I have read and agree to the <Text style={styles.acceptStrong}>ARC Ride Rental Agreement</Text> and understand all terms, including the fixed car wash fee, return
+              time policy, extension rules, and late-return fees.
+            </Text>
+          }
+        />
+        {!reachedEnd && (
+          <View style={styles.hintRow}>
+            <Icon name="alert-circle" size={13} color={palette.amberStrong} />
+            <Text style={styles.hint}>You must scroll through the agreement above before accepting.</Text>
+          </View>
+        )}
+        {error && reachedEnd ? <Text style={styles.error}>{error}</Text> : null}
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { backgroundColor: palette.white, borderRadius: 15, borderWidth: 1, borderColor: palette.line, padding: 15 },
-  cardError: { borderColor: palette.danger },
-  text: { color: palette.muted, fontSize: 12, lineHeight: 18 },
-  accepted: { color: palette.green, fontWeight: '800' },
-  button: { minHeight: 44, marginTop: 12 },
-  error: { color: palette.danger, fontSize: 12, fontWeight: '600', marginTop: 8 },
-  modal: { flex: 1, paddingHorizontal: gutter, backgroundColor: palette.canvas },
-  modalTitle: { color: palette.navy, fontSize: 24, fontWeight: '900', marginTop: 20 },
-  modalScroll: { backgroundColor: palette.white, borderRadius: 16, marginTop: 18 },
-  modalContent: { padding: 17 },
-  clause: { flexDirection: 'row', marginBottom: 19 },
-  clauseNumber: { color: palette.blue, fontSize: 12, fontWeight: '900', width: 30 },
-  clauseText: { color: palette.ink, fontSize: 14, lineHeight: 21, flex: 1 },
-  end: { color: palette.muted, fontSize: 12, textAlign: 'center', padding: 20 },
-  close: { marginTop: 4 },
-});

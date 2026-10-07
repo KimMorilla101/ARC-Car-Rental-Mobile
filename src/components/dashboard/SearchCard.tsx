@@ -1,19 +1,31 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { DateTimeField } from '@/components/booking/DateTimeField';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
-import { SearchField } from '@/components/common/SearchField';
+import { Button } from '@/components/common/Button';
+import { Icon } from '@/components/common/Icon';
+import { Select } from '@/components/common/Select';
 import { palette } from '@/constants/theme';
 import { addDays, defaultPickup, startOfDay, withTimeOf } from '@/utils/bookingDates';
 
-/** Home search: opens Browse filtered by name/type and by availability for the chosen dates. */
+import { styles } from './SearchCard.styles';
+
+const passengerOptions = [
+  { value: '', label: 'Any' },
+  { value: '2', label: '2+' },
+  { value: '4', label: '4+' },
+  { value: '5', label: '5+' },
+  { value: '7', label: '7+' },
+  { value: '12', label: '12+' },
+];
+
+/** Search card that overlaps the Home hero; opens Browse filtered by availability and seats. */
 export function SearchCard() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
   const [pickup, setPickup] = useState(defaultPickup);
   const [returnDate, setReturnDate] = useState(() => addDays(defaultPickup(), 3));
+  const [passengers, setPassengers] = useState('');
 
   const onPickupChange = (date: Date) => {
     const next = withTimeOf(date, pickup);
@@ -24,26 +36,26 @@ export function SearchCard() {
   const onSearch = () => {
     router.push({
       pathname: '/browse',
-      params: { search: search.trim(), pickupAt: pickup.toISOString(), returnAt: withTimeOf(returnDate, pickup).toISOString() },
+      params: { pickupAt: pickup.toISOString(), returnAt: withTimeOf(returnDate, pickup).toISOString(), minSeats: passengers || undefined },
     });
   };
 
   return (
     <View style={styles.card}>
-      <Text style={styles.label}>SEARCH AVAILABLE CARS</Text>
-      <SearchField placeholder="Car name or type" value={search} onChangeText={setSearch} onSubmitEditing={onSearch} />
-      <View style={styles.dates}>
-        <DateTimeField tone="dark" label="Pickup" mode="date" value={pickup} minimumDate={new Date()} onChange={onPickupChange} />
-        <DateTimeField tone="dark" label="Return" mode="date" value={returnDate} minimumDate={addDays(pickup, 1)} onChange={setReturnDate} />
+      <Text style={styles.label}>PICKUP LOCATION</Text>
+      <View style={styles.location}>
+        <Icon name="map-pin" size={16} color={palette.blue} />
+        <Text style={styles.locationText}>Davao City</Text>
       </View>
-      <PrimaryButton label="Search cars  →" onPress={onSearch} style={styles.button} />
+      <DateTimeField label="Pickup date" mode="date" value={pickup} minimumDate={new Date()} onChange={onPickupChange} />
+      <DateTimeField label="Return date" mode="date" value={returnDate} minimumDate={addDays(pickup, 1)} onChange={setReturnDate} />
+      <Text style={[styles.label, styles.passengersLabel]}>PASSENGERS</Text>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Select accessibilityLabel="Passengers" value={passengers} options={passengerOptions} onChange={setPassengers} />
+        </View>
+        <Button label="Search" icon="search" size="sm" onPress={onSearch} style={styles.search} />
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { backgroundColor: palette.navy, borderRadius: 20, padding: 18, marginTop: 22 },
-  label: { color: '#91B9FF', fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 11 },
-  dates: { flexDirection: 'row', gap: 10, marginTop: 10 },
-  button: { minHeight: 44, borderRadius: 12, marginTop: 12 },
-});

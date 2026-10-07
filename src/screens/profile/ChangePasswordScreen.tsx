@@ -1,12 +1,15 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 
-import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { Button } from '@/components/common/Button';
+import { Icon } from '@/components/common/Icon';
+import { BackLink, PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
-import { TopBar } from '@/components/common/TopBar';
 import { ChangePasswordForm } from '@/components/profile/ChangePasswordForm';
 import { palette } from '@/constants/theme';
+
+import { styles } from './ChangePasswordScreen.styles';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
@@ -14,19 +17,21 @@ export default function ChangePasswordScreen() {
 
   return (
     <Screen>
-      <TopBar back title="Change password" />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={screenStyles.stackScroll} keyboardShouldPersistTaps="handled">
+          <BackLink label="Profile" />
           {changed ? (
             <View style={styles.success} accessibilityLiveRegion="polite">
-              <Text style={styles.check}>✓</Text>
-              <Text style={styles.title}>Password updated</Text>
+              <View style={styles.check}>
+                <Icon name="check-circle" size={32} color={palette.green} />
+              </View>
+              <Text style={styles.title}>Password Updated</Text>
               <Text style={styles.text}>Use your new password the next time you sign in.</Text>
-              <PrimaryButton label="Back to profile" onPress={() => router.back()} style={styles.stretch} />
+              <Button label="Back to Profile" onPress={() => router.back()} style={styles.stretch} />
             </View>
           ) : (
             <>
-              <Text style={screenStyles.subtitle}>Choose a strong password you do not use anywhere else.</Text>
+              <PageHeader title="Change Password" subtitle="Choose a strong password you do not use anywhere else." />
               <ChangePasswordForm onChanged={() => setChanged(true)} />
             </>
           )}
@@ -35,12 +40,3 @@ export default function ChangePasswordScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  success: { alignItems: 'center', paddingVertical: 30 },
-  check: { width: 58, height: 58, borderRadius: 29, backgroundColor: '#DDF7ED', color: palette.green, textAlign: 'center', lineHeight: 58, fontSize: 28, fontWeight: '900', overflow: 'hidden' },
-  title: { color: palette.navy, fontSize: 22, fontWeight: '900', marginTop: 14 },
-  text: { color: palette.muted, fontSize: 14, textAlign: 'center', marginTop: 6 },
-  stretch: { alignSelf: 'stretch' },
-});

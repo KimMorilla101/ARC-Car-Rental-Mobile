@@ -1,82 +1,99 @@
 import { ImageBackground } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandLogo } from '@/components/common/BrandLogo';
+import { Button, type ButtonVariant } from '@/components/common/Button';
+import { FocusAwareStatusBar } from '@/components/common/FocusAwareStatusBar';
+import { Icon, type IconName } from '@/components/common/Icon';
+import { palette, gradients } from '@/constants/theme';
 
-// Marketing figures from the Figma welcome screen. Replace with real values from ARC when known.
-const highlights = [
-  { value: '50+', label: 'Premium cars' },
-  { value: '4.8', label: 'Average rating' },
-  { value: '24/7', label: 'Road support' },
+import { styles } from './WelcomeScreen.styles';
+
+interface Slide {
+  eyebrow: string;
+  title: string;
+  body: string;
+  icon: IconName;
+  accent: string;
+  button: ButtonVariant;
+  image: string;
+}
+
+// Onboarding copy from the Figma prototype. Swap the photos for the exported Figma assets.
+const slides: Slide[] = [
+  {
+    eyebrow: 'WELCOME TO ARC RIDE',
+    title: 'Find Your\nPerfect Car',
+    body: 'Browse premium vehicles. Smart recommendations matched to your trip type, budget, and passenger count.',
+    icon: 'truck',
+    accent: palette.blueBright,
+    button: 'primary',
+    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    eyebrow: 'SIMPLE BOOKING',
+    title: 'Book in\nMinutes',
+    body: 'Set your pickup date, return date, and location. Send your booking in a few taps and track its status in the app.',
+    icon: 'zap',
+    accent: palette.green,
+    button: 'success',
+    image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    eyebrow: 'TRUSTED SERVICE',
+    title: 'Drive with\nConfidence',
+    body: 'Every vehicle is inspected and road-ready. Transparent pricing, zero hidden fees, 24/7 support.',
+    icon: 'shield',
+    accent: palette.purple,
+    button: 'purple',
+    image: 'https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&fit=crop&w=1200&q=80',
+  },
 ];
 
-/** First screen for signed-out users. The native splash screen is handled by expo-splash-screen. */
+/** First screen for signed-out users: three-slide onboarding that ends at sign-in. */
 export default function WelcomeScreen() {
   const router = useRouter();
+  const [index, setIndex] = useState(0);
+  const slide = slides[index];
+  const last = index === slides.length - 1;
+
+  const next = () => (last ? router.push('/login') : setIndex(index + 1));
+
   return (
-    <ImageBackground
-      source={{ uri: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=85' }}
-      style={styles.background}
-      contentFit="cover">
-      <View style={styles.overlay} />
+    <ImageBackground source={{ uri: slide.image }} style={styles.background} contentFit="cover" transition={300}>
+      <FocusAwareStatusBar style="light" />
+      <LinearGradient colors={gradients.heroOverlay} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <BrandLogo inverse />
-          <Text style={styles.headerLabel}>PREMIUM RENTALS</Text>
-        </View>
+        <Pressable onPress={() => router.push('/login')} hitSlop={12} style={styles.skip} accessibilityRole="button">
+          <Text style={styles.skipText}>Skip</Text>
+        </Pressable>
         <View style={styles.content}>
-          <View style={styles.eyebrow}>
-            <View style={styles.dot} />
-            <Text style={styles.eyebrowText}>DAVAO CITY&apos;S TRUSTED CAR RENTAL</Text>
+          <View style={[styles.iconTile, { backgroundColor: `${slide.accent}26`, borderColor: `${slide.accent}55` }]}>
+            <Icon name={slide.icon} size={22} color={slide.accent} />
           </View>
+          <Text style={[styles.eyebrow, { color: slide.accent }]}>{slide.eyebrow}</Text>
           <Text style={styles.title} accessibilityRole="header">
-            Your journey.{'\n'}Your way.
+            {slide.title}
           </Text>
-          <Text style={styles.subtitle}>Premium cars, transparent pricing, and a smoother way to get where you are going.</Text>
-          <View style={styles.featureRow}>
-            {highlights.map((item) => (
-              <View key={item.label}>
-                <Text style={styles.featureValue}>{item.value}</Text>
-                <Text style={styles.featureLabel}>{item.label}</Text>
-              </View>
+          <Text style={styles.body}>{slide.body}</Text>
+          <View style={styles.dots} accessibilityLabel={`Slide ${index + 1} of ${slides.length}`}>
+            {slides.map((item, dotIndex) => (
+              <Pressable key={item.eyebrow} onPress={() => setIndex(dotIndex)} hitSlop={6} accessibilityRole="button" accessibilityLabel={`Go to slide ${dotIndex + 1}`}>
+                <View style={[styles.dot, dotIndex === index && [styles.dotActive, { backgroundColor: slide.accent }]]} />
+              </Pressable>
             ))}
           </View>
-          <Pressable style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]} onPress={() => router.push('/login')} accessibilityRole="button">
-            <Text style={styles.primaryButtonText}>Start your ride</Text>
-            <Text style={styles.arrow}>→</Text>
-          </Pressable>
-          <Pressable style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]} onPress={() => router.push('/register')} accessibilityRole="button">
-            <Text style={styles.secondaryButtonText}>Create an account</Text>
+          <Button label={last ? 'Get Started' : 'Continue'} trailingIcon="chevron-right" variant={slide.button} onPress={next} />
+          <Pressable onPress={() => router.push('/register')} hitSlop={8} style={styles.registerLink} accessibilityRole="link">
+            <Text style={styles.registerText}>
+              New here? <Text style={styles.registerAccent}>Create an account</Text>
+            </Text>
           </Pressable>
         </View>
-        <Text style={styles.footer}>PAY IN PERSON • NO HIDDEN FEES</Text>
       </SafeAreaView>
     </ImageBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: '#07101B' },
-  overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(4, 13, 24, 0.72)' },
-  safeArea: { flex: 1, paddingHorizontal: 28, justifyContent: 'space-between', width: '100%', maxWidth: 560, alignSelf: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12 },
-  headerLabel: { color: '#AAB6C7', fontSize: 9, letterSpacing: 1.5 },
-  content: { paddingBottom: 26 },
-  eyebrow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#4C91FF', marginRight: 8 },
-  eyebrowText: { color: '#86B4FF', fontSize: 11, fontWeight: '800', letterSpacing: 1.2 },
-  title: { color: '#FFFFFF', fontSize: 48, lineHeight: 54, fontWeight: '800', letterSpacing: -1.5 },
-  subtitle: { color: '#C7D3E4', fontSize: 16, lineHeight: 25, marginTop: 18, maxWidth: 340 },
-  featureRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 28, marginVertical: 30 },
-  featureValue: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
-  featureLabel: { color: '#94A5BB', fontSize: 11, marginTop: 4 },
-  primaryButton: { height: 56, borderRadius: 16, backgroundColor: '#347FF5', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  arrow: { color: '#FFFFFF', fontSize: 22 },
-  secondaryButton: { height: 54, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', justifyContent: 'center', alignItems: 'center', marginTop: 12 },
-  secondaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  footer: { color: '#8292A8', fontSize: 10, letterSpacing: 1.4, textAlign: 'center', paddingBottom: 12 },
-  pressed: { opacity: 0.78 },
-});

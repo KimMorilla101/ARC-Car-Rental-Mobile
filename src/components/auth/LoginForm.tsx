@@ -1,16 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
+import { Button } from '@/components/common/Button';
 import { Checkbox } from '@/components/common/Checkbox';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { FormField } from '@/components/common/FormField';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
-import { palette } from '@/constants/theme';
+import { apiConfig } from '@/constants/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubmit } from '@/hooks/useSubmit';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
 import { hasErrors, rules, validate } from '@/utils/validation';
+
+import { styles } from './LoginForm.styles';
 
 const FIELDS = ['email', 'password'] as const;
 
@@ -47,7 +49,8 @@ export function LoginForm() {
       <ErrorMessage message={getFormError(error, FIELDS)} />
       <FormField
         label="Email address"
-        placeholder="you@example.com"
+        icon="mail"
+        placeholder="juan@email.com"
         value={values.email}
         onChangeText={update('email')}
         error={errors.email ?? serverErrors.email}
@@ -59,6 +62,7 @@ export function LoginForm() {
       />
       <FormField
         label="Password"
+        icon="lock"
         placeholder="Enter your password"
         value={values.password}
         onChangeText={update('password')}
@@ -75,21 +79,18 @@ export function LoginForm() {
           <Text style={styles.link}>Forgot password?</Text>
         </Pressable>
       </View>
-      <PrimaryButton label="Sign in  →" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />
+      <Button label="Sign In" icon="arrow-right" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />
       <View style={styles.footer}>
-        <Text style={styles.footerText}>New to ARC Ride? </Text>
+        <Text style={styles.footerText}>Don&apos;t have an account? </Text>
         <Pressable onPress={() => router.replace('/register')} hitSlop={8} accessibilityRole="link">
-          <Text style={styles.link}>Create account</Text>
+          <Text style={styles.link}>Create Account</Text>
         </Pressable>
       </View>
+      {apiConfig.useMockApi && (
+        <View style={styles.demo}>
+          <Text style={styles.demoText}>Demo data mode: sign in with juan@example.com / password123</Text>
+        </View>
+      )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  options: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
-  link: { color: palette.blue, fontSize: 13, fontWeight: '800' },
-  submit: { marginTop: 28 },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
-  footerText: { color: palette.muted, fontSize: 13 },
-});

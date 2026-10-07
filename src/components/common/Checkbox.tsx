@@ -1,26 +1,31 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 import { palette } from '@/constants/theme';
 
-export function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+import { Icon } from './Icon';
+import { styles } from './Checkbox.styles';
+
+interface CheckboxProps {
+  label: ReactNode;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+}
+
+export function Checkbox({ label, checked, onChange, disabled = false, accessibilityLabel }: CheckboxProps) {
   return (
     <Pressable
       onPress={() => onChange(!checked)}
+      disabled={disabled}
       hitSlop={8}
-      style={styles.row}
+      style={[styles.row, disabled && styles.disabled]}
       accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
-      accessibilityLabel={label}>
-      <View style={[styles.box, checked && styles.boxChecked]}>{checked && <Text style={styles.tick}>✓</Text>}</View>
-      <Text style={styles.label}>{label}</Text>
+      accessibilityState={{ checked, disabled }}
+      accessibilityLabel={accessibilityLabel ?? (typeof label === 'string' ? label : undefined)}>
+      <View style={[styles.box, checked && styles.boxChecked]}>{checked && <Icon name="check" size={12} color={palette.white} />}</View>
+      {typeof label === 'string' ? <Text style={styles.label}>{label}</Text> : <View style={styles.custom}>{label}</View>}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  box: { width: 18, height: 18, borderRadius: 5, borderWidth: 1.5, borderColor: palette.mutedLight, alignItems: 'center', justifyContent: 'center' },
-  boxChecked: { backgroundColor: palette.blue, borderColor: palette.blue },
-  tick: { color: palette.white, fontSize: 11, fontWeight: '900' },
-  label: { color: '#6E7D91', fontSize: 13 },
-});

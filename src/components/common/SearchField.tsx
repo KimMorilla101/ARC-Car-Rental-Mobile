@@ -1,14 +1,17 @@
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { TextInput, View, type TextInputProps } from 'react-native';
 
 import { palette } from '@/constants/theme';
+
+import { Icon } from './Icon';
+import { styles } from './SearchField.styles';
 
 export function SearchField(props: Pick<TextInputProps, 'value' | 'onChangeText' | 'placeholder' | 'onSubmitEditing'>) {
   return (
     <View style={styles.field}>
-      <Text style={styles.icon}>⌕</Text>
+      <Icon name="search" size={17} color={palette.mutedLight} />
       <TextInput
         {...props}
-        placeholderTextColor={palette.muted}
+        placeholderTextColor={palette.placeholder}
         style={styles.input}
         returnKeyType="search"
         autoCorrect={false}
@@ -17,18 +20,3 @@ export function SearchField(props: Pick<TextInputProps, 'value' | 'onChangeText'
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  field: {
-    height: 50,
-    borderRadius: 13,
-    backgroundColor: palette.white,
-    borderWidth: 1,
-    borderColor: palette.line,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-  },
-  icon: { color: palette.blue, fontSize: 25, marginRight: 9 },
-  input: { flex: 1, color: palette.ink, fontSize: 14 },
-});

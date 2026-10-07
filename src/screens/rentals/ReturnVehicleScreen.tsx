@@ -1,20 +1,26 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
+import { Button } from '@/components/common/Button';
+import { Card } from '@/components/common/Card';
 import { ErrorState } from '@/components/common/ErrorMessage';
+import { Icon } from '@/components/common/Icon';
 import { InfoRow } from '@/components/common/InfoRow';
 import { DetailSkeleton } from '@/components/common/LoadingSkeleton';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { BackLink, PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
-import { TopBar } from '@/components/common/TopBar';
 import { palette } from '@/constants/theme';
 import { useApiQuery } from '@/hooks/useApiQuery';
 import { rentalApi } from '@/services/rentalApi';
-import { formatDateTime, formatPeso } from '@/utils/formatters';
+import { formatDateTime, formatPeso, plural } from '@/utils/formatters';
+
+import { styles } from './ReturnVehicleScreen.styles';
+
+const steps = ['Bring the vehicle to the return branch below.', 'Keep the keys and vehicle documents ready.', 'A staff member will inspect the vehicle and record the return.'];
 
 /**
- * Return Vehicle Mode. The late fee is the backend's estimate; the final amount is recorded by
- * ARC staff when they verify the return, so this screen does not mark anything as returned.
+ * Return Vehicle Mode. The late fee shown is the backend's estimate; the final amount is recorded
+ * by ARC staff when they verify the return, so this screen never marks anything as returned.
  */
 export default function ReturnVehicleScreen() {
   const router = useRouter();
@@ -24,49 +30,47 @@ export default function ReturnVehicleScreen() {
 
   return (
     <Screen>
-      <TopBar back title="Return vehicle" />
       <ScrollView contentContainerStyle={screenStyles.stackScroll}>
+        <BackLink />
         {summary.isLoading ? (
           <DetailSkeleton />
         ) : summary.error || !data ? (
           <ErrorState error={summary.error} onRetry={summary.refetch} />
         ) : (
           <>
+            <PageHeader title="Return Vehicle" subtitle="Your return deadline has been reached." />
             <View style={styles.alert} accessibilityRole="alert">
-              <Text style={styles.alertIcon}>!</Text>
-              <Text style={styles.alertTitle}>Return Vehicle Mode</Text>
-              <Text style={styles.alertText}>Your return deadline has been reached. Please return the vehicle to ARC Car Rental as soon as possible.</Text>
+              <Icon name="alert-triangle" size={22} color={palette.dangerText} />
+              <Text style={styles.alertText}>Please return the vehicle to ARC Car Rental as soon as possible. Late-return fees apply for every hour of delay.</Text>
             </View>
-            <Text style={screenStyles.section}>Return instructions</Text>
-            <View style={screenStyles.card}>
-              <Text style={styles.instruction}>1. Bring the vehicle to {data.shopAddress}.</Text>
-              <Text style={styles.instruction}>2. Keep your keys and documents ready.</Text>
-              <Text style={styles.instruction}>3. A staff member will inspect and verify the return.</Text>
-            </View>
-            <Text style={screenStyles.section}>Late-return estimate</Text>
-            <View style={styles.feeCard}>
-              <InfoRow tone="dark" layout="inline" label="Scheduled return" value={formatDateTime(data.scheduledReturnAt)} />
-              <InfoRow tone="dark" layout="inline" label="Delayed hours so far" value={`${data.delayedHours} hour${data.delayedHours === 1 ? '' : 's'}`} />
-              <InfoRow tone="dark" layout="inline" label="Late-return fee per hour" value={formatPeso(data.lateFeePerHour)} />
-              <InfoRow tone="dark" layout="inline" label="Estimated late-return fee" value={formatPeso(data.estimatedLateFee)} strong />
-            </View>
-            <Text style={styles.note}>
-              The final late-return fee is recorded after the vehicle is returned and verified. An expired rental cannot be extended; create a new booking after return.
-            </Text>
-            <PrimaryButton label="Back to booking" onPress={() => router.back()} />
+
+            <Card title="Return to" icon="map-pin" style={styles.section}>
+              <Text style={styles.location}>{data.returnLocation}</Text>
+            </Card>
+
+            <Card title="How to return" icon="list" style={styles.section}>
+              {steps.map((step, index) => (
+                <View key={step} style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  </View>
+                  <Text style={styles.stepText}>{step}</Text>
+                </View>
+              ))}
+            </Card>
+
+            <Card title="Late-return estimate" icon="clock" style={styles.section}>
+              <InfoRow label="Scheduled return" value={formatDateTime(data.scheduledReturnAt)} />
+              <InfoRow label="Hours late so far" value={plural(data.delayedHours, 'hour')} />
+              <InfoRow label="Late-return fee" value={`${formatPeso(data.lateFeePerHour)}/hour`} />
+              <View style={styles.divider} />
+              <InfoRow label="Estimated late fee" value={formatPeso(data.estimatedLateFee)} strong />
+            </Card>
+            <Text style={styles.note}>The final late-return fee is recorded after ARC staff verify the return. An expired rental cannot be extended.</Text>
+            <Button label="Back to Booking" icon="chevron-left" variant="outline" onPress={() => router.back()} style={styles.section} />
           </>
         )}
       </ScrollView>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  alert: { backgroundColor: palette.amberSoft, borderRadius: 17, padding: 18, alignItems: 'center', marginTop: 15 },
-  alertIcon: { color: palette.white, backgroundColor: palette.amberStrong, width: 34, height: 34, borderRadius: 17, lineHeight: 34, textAlign: 'center', fontSize: 20, fontWeight: '900', overflow: 'hidden' },
-  alertTitle: { color: palette.amber, fontSize: 20, fontWeight: '900', marginTop: 11 },
-  alertText: { color: palette.amberText, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 5 },
-  instruction: { color: palette.ink, fontSize: 13, lineHeight: 21, marginBottom: 9 },
-  feeCard: { backgroundColor: palette.navy, borderRadius: 16, padding: 17 },
-  note: { color: palette.muted, fontSize: 12, lineHeight: 18, marginTop: 16 },
-});

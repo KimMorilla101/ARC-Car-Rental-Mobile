@@ -1,40 +1,48 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, ScrollView, View } from 'react-native';
 
 import { BookingCard } from '@/components/booking/BookingCard';
 import { ChoiceChip } from '@/components/common/ChoiceChip';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorState } from '@/components/common/ErrorMessage';
 import { BookingListSkeleton } from '@/components/common/LoadingSkeleton';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
-import { TopBar } from '@/components/common/TopBar';
 import { palette } from '@/constants/theme';
 import { useRefetchOnFocus } from '@/hooks/useApiQuery';
 import { useBookings } from '@/hooks/useBookings';
-import type { BookingListFilter } from '@/types/booking';
+import type { BookingStatus } from '@/types/booking';
+import { bookingStatusLabel } from '@/utils/formatters';
 
-const filters: { value: BookingListFilter; label: string; empty: string }[] = [
-  { value: 'all', label: 'All', empty: 'You have not booked a car yet.' },
-  { value: 'upcoming', label: 'Upcoming', empty: 'No upcoming bookings.' },
-  { value: 'active', label: 'Active', empty: 'You have no car out right now.' },
-  { value: 'completed', label: 'Completed', empty: 'No completed rentals yet.' },
-  { value: 'cancelled', label: 'Cancelled', empty: 'No cancelled bookings.' },
+import { styles } from './RentalHistoryScreen.styles';
+
+// Tab order from the Figma design. "Active" also covers rentals that are overdue for return.
+const tabs: { key: string; label: string; statuses: BookingStatus[] }[] = [
+  { key: 'pending', label: bookingStatusLabel.pending, statuses: ['pending'] },
+  { key: 'pending_verification', label: bookingStatusLabel.pending_verification, statuses: ['pending_verification'] },
+  { key: 'confirmed', label: bookingStatusLabel.confirmed, statuses: ['confirmed'] },
+  { key: 'active', label: 'Active', statuses: ['active', 'return_due'] },
+  { key: 'completed', label: bookingStatusLabel.completed, statuses: ['completed', 'returned'] },
+  { key: 'cancelled', label: bookingStatusLabel.cancelled, statuses: ['cancelled'] },
 ];
 
-/** "My bookings" tab: upcoming, active, completed and cancelled rentals. */
+/** "My Bookings" tab: every reservation, filterable by status with counts. */
 export default function RentalHistoryScreen() {
   const router = useRouter();
-  const [filter, setFilter] = useState<BookingListFilter>('all');
-  const bookings = useBookings(filter);
+  const [tab, setTab] = useState('all');
+  const bookings = useBookings('all');
   useRefetchOnFocus(bookings.refetch);
-  const current = filters.find((item) => item.value === filter) ?? filters[0];
+
+  const all = bookings.data ?? [];
+  const current = tabs.find((item) => item.key === tab);
+  const visible = current ? all.filter((item) => current.statuses.includes(item.status)) : all;
+  const count = (statuses: BookingStatus[]) => all.filter((item) => statuses.includes(item.status)).length;
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <TopBar title="My bookings" />
       <FlatList
-        data={bookings.error ? [] : (bookings.data ?? [])}
+        data={bookings.error ? [] : visible}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => <BookingCard booking={item} />}
         contentContainerStyle={screenStyles.tabScroll}
@@ -42,12 +50,15 @@ export default function RentalHistoryScreen() {
         refreshControl={<RefreshControl refreshing={bookings.isRefreshing} onRefresh={bookings.refresh} tintColor={palette.blue} />}
         ListHeaderComponent={
           <View>
-            <Text style={screenStyles.title}>Your reservations</Text>
-            <Text style={screenStyles.subtitle}>Keep track of every ARC Ride journey.</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-              {filters.map((item) => (
-                <ChoiceChip key={item.value} label={item.label} active={filter === item.value} onPress={() => setFilter(item.value)} />
-              ))}
+            <PageHeader title="My Bookings" subtitle={bookings.data ? `${all.length} total reservation${all.length === 1 ? '' : 's'}` : 'Your reservations'} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+              <ChoiceChip label="All" active={tab === 'all'} onPress={() => setTab('all')} />
+              {tabs.map((item) => {
+                const total = count(item.statuses);
+                // Hide empty statuses to keep the row short, but never hide the selected one.
+                if (total === 0 && tab !== item.key) return null;
+                return <ChoiceChip key={item.key} label={`${item.label} (${total})`} active={tab === item.key} onPress={() => setTab(item.key)} />;
+              })}
             </ScrollView>
           </View>
         }
@@ -57,14 +68,16 @@ export default function RentalHistoryScreen() {
           ) : bookings.error ? (
             <ErrorState error={bookings.error} onRetry={bookings.refetch} />
           ) : (
-            <EmptyState title="Nothing here yet" message={current.empty} actionLabel="Browse cars" onAction={() => router.push('/browse')} />
+            <EmptyState
+              icon="book-open"
+              title={current ? `No ${current.label.toLowerCase()} bookings` : 'No bookings yet'}
+              message="When you book a car, it will show up here."
+              actionLabel="Browse Cars"
+              onAction={() => router.push('/browse')}
+            />
           )
         }
       />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  filters: { gap: 8, paddingVertical: 19 },
-});

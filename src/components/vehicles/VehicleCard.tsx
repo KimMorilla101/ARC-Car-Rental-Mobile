@@ -1,76 +1,110 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
+import { Button } from '@/components/common/Button';
+import { Icon } from '@/components/common/Icon';
+import { Pill } from '@/components/common/Pill';
 import { palette } from '@/constants/theme';
 import type { Vehicle } from '@/types/vehicle';
 import { formatPeso } from '@/utils/formatters';
 
-export function VehicleCard({ vehicle, compact = false }: { vehicle: Vehicle; compact?: boolean }) {
+import { styles } from './VehicleCard.styles';
+
+export const categoryLabel = (category: Vehicle['category']) => (category === 'MPV' ? 'Van/MPV' : category);
+
+/**
+ * Vehicle card from the Figma design.
+ * `featured` (Home): price shown on the photo. `list` (Browse): price beside the name, plus description and spec chips.
+ */
+export function VehicleCard({ vehicle, variant = 'list' }: { vehicle: Vehicle; variant?: 'featured' | 'list' }) {
   const router = useRouter();
   const available = vehicle.availableUnits > 0;
+  const id = String(vehicle.id);
+  const openDetails = () => router.push({ pathname: '/vehicle/[id]', params: { id } });
+  const book = () => router.push({ pathname: '/booking/new', params: { vehicleId: id } });
+  const featured = variant === 'featured';
+
   return (
-    <Pressable
-      onPress={() => router.push({ pathname: '/vehicle/[id]', params: { id: String(vehicle.id) } })}
-      accessibilityRole="button"
-      accessibilityLabel={`${vehicle.name}, ${formatPeso(vehicle.rates.daily)} per day`}
-      style={({ pressed }) => [styles.card, compact && styles.compact, pressed && styles.pressed]}>
-      <Image source={{ uri: vehicle.imageUrl }} style={compact ? styles.imageCompact : styles.image} contentFit="cover" transition={200} />
-      <View style={styles.body}>
-        <View style={styles.nameRow}>
-          <View style={styles.nameColumn}>
-            <Text style={styles.name} numberOfLines={1}>
-              {vehicle.name}
-            </Text>
-            <Text style={styles.category}>
-              {vehicle.category} • {vehicle.seats} seats
-            </Text>
-            <Text style={[styles.availability, !available && styles.unavailable]}>
-              {available ? `${vehicle.availableUnits} unit${vehicle.availableUnits === 1 ? '' : 's'} available` : 'Fully booked'}
-            </Text>
-          </View>
-          {vehicle.rating !== null && <Text style={styles.rating}>★ {vehicle.rating.toFixed(1)}</Text>}
+    <View style={styles.card}>
+      <Pressable onPress={openDetails} accessibilityRole="imagebutton" accessibilityLabel={`${vehicle.name} details`}>
+        <Image source={{ uri: vehicle.imageUrl }} style={styles.image} contentFit="cover" transition={200} />
+        <View style={styles.badgeLeft}>
+          {available ? <Pill tone="solidGreen">● Available</Pill> : <Pill tone="red">Fully booked</Pill>}
         </View>
-        {!compact && (
-          <View style={styles.specRow}>
-            <Text style={styles.spec}>A {vehicle.transmission}</Text>
-            <Text style={styles.spec}>● {vehicle.fuel}</Text>
+        {vehicle.isPopular && (
+          <View style={styles.badgeRight}>
+            <Pill tone="solidBlue" icon="trending-up">Popular</Pill>
           </View>
         )}
-        <View style={styles.priceRow}>
-          <View>
-            <Text style={styles.price}>
+        {featured && (
+          <View style={styles.priceTag}>
+            <Text style={styles.priceTagValue}>
               {formatPeso(vehicle.rates.daily)}
-              <Text style={styles.perDay}> / day</Text>
+              <Text style={styles.priceTagUnit}>/day</Text>
             </Text>
-            {vehicle.matchScore !== null && <Text style={styles.match}>{vehicle.matchScore}% match</Text>}
           </View>
-          <Text style={styles.viewLink}>View details ›</Text>
+        )}
+      </Pressable>
+
+      <View style={styles.body}>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>
+            {vehicle.name}
+          </Text>
+          {featured ? (
+            vehicle.rating !== null && <Rating value={vehicle.rating} />
+          ) : (
+            <View style={styles.priceBlock}>
+              <Text style={styles.price}>{formatPeso(vehicle.rates.daily)}</Text>
+              <Text style={styles.perDay}>/day</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.category}>{categoryLabel(vehicle.category)}</Text>
+
+        {featured ? (
+          <View style={styles.specLine}>
+            <Icon name="users" size={13} color={palette.muted} />
+            <Text style={styles.specText}>{vehicle.seats}</Text>
+            <Text style={styles.specDivider}>|</Text>
+            <Text style={styles.specText}>{vehicle.transmission}</Text>
+            <Text style={styles.specDivider}>|</Text>
+            <Text style={styles.specText}>{vehicle.fuel}</Text>
+          </View>
+        ) : (
+          <>
+            {vehicle.rating !== null && (
+              <View style={styles.ratingRow}>
+                <Rating value={vehicle.rating} />
+                <Text style={styles.reviews}>({vehicle.reviewCount} reviews)</Text>
+              </View>
+            )}
+            <Text style={styles.description} numberOfLines={2}>
+              {vehicle.description}
+            </Text>
+            <View style={styles.chips}>
+              <Text style={styles.chip}>{vehicle.seats} pax</Text>
+              <Text style={styles.chip}>{vehicle.transmission}</Text>
+              <Text style={styles.chip}>{vehicle.fuel}</Text>
+            </View>
+          </>
+        )}
+
+        <View style={styles.actions}>
+          <Button label={featured ? 'Details' : 'View Details'} variant="outline" size="sm" onPress={openDetails} style={styles.action} />
+          <Button label="Book Now" size="sm" onPress={book} disabled={!available} style={styles.action} />
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: { backgroundColor: palette.white, borderRadius: 18, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: palette.border },
-  compact: { width: 260, marginRight: 14 },
-  pressed: { opacity: 0.78 },
-  image: { width: '100%', height: 170 },
-  imageCompact: { width: '100%', height: 135 },
-  body: { padding: 15 },
-  nameRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  nameColumn: { flex: 1 },
-  name: { color: palette.navy, fontSize: 17, fontWeight: '800' },
-  category: { color: palette.muted, fontSize: 12, marginTop: 4 },
-  availability: { color: palette.green, fontSize: 10, fontWeight: '800', marginTop: 4 },
-  unavailable: { color: palette.danger },
-  rating: { color: palette.star, fontSize: 12, fontWeight: '800' },
-  specRow: { flexDirection: 'row', gap: 18, marginTop: 16 },
-  spec: { color: palette.muted, fontSize: 11 },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 15 },
-  price: { color: palette.navy, fontSize: 18, fontWeight: '900' },
-  perDay: { color: palette.muted, fontSize: 11, fontWeight: '500' },
-  match: { color: palette.green, fontSize: 11, fontWeight: '800', marginTop: 3 },
-  viewLink: { color: palette.blue, fontSize: 12, fontWeight: '800' },
-});
+function Rating({ value }: { value: number }) {
+  return (
+    <View style={styles.rating} accessibilityLabel={`Rated ${value.toFixed(1)} out of 5`}>
+      <Icon name="star" size={13} color={palette.star} />
+      <Text style={styles.ratingText}>{value.toFixed(1)}</Text>
+    </View>
+  );
+}

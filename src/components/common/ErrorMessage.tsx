@@ -1,10 +1,13 @@
-import { StyleSheet, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { Text, View } from 'react-native';
 
-import { palette } from '@/constants/theme';
+import { palette, text } from '@/constants/theme';
 import { ApiError } from '@/services/api';
 import { getErrorMessage } from '@/utils/errorHandler';
 
-import { PrimaryButton } from './PrimaryButton';
+import { Button } from './Button';
+import { Icon } from './Icon';
+import { styles } from './ErrorMessage.styles';
 
 /** Full-section error with a retry action, used when a screen's data failed to load. */
 export function ErrorState({ error, onRetry, title }: { error: unknown; onRetry?: () => void; title?: string }) {
@@ -12,11 +15,11 @@ export function ErrorState({ error, onRetry, title }: { error: unknown; onRetry?
   return (
     <View style={styles.state} accessibilityRole="alert">
       <View style={styles.icon}>
-        <Text style={styles.iconText}>!</Text>
+        <Icon name={notAvailable ? 'clock' : 'wifi-off'} size={24} color={palette.danger} />
       </View>
       <Text style={styles.title}>{title ?? (notAvailable ? 'Not available yet' : 'Could not load this')}</Text>
-      <Text style={styles.message}>{getErrorMessage(error)}</Text>
-      {onRetry && !notAvailable && <PrimaryButton label="Try again" variant="outline" onPress={onRetry} style={styles.retry} />}
+      <Text style={[text.subtitle, styles.message]}>{getErrorMessage(error)}</Text>
+      {onRetry && !notAvailable && <Button label="Try again" icon="refresh-cw" variant="outline" onPress={onRetry} style={styles.retry} />}
     </View>
   );
 }
@@ -26,18 +29,22 @@ export function ErrorMessage({ message }: { message: string | null | undefined }
   if (!message) return null;
   return (
     <View style={styles.banner} accessibilityRole="alert" accessibilityLiveRegion="assertive">
+      <Icon name="alert-circle" size={16} color={palette.dangerText} />
       <Text style={styles.bannerText}>{message}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  state: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
-  icon: { width: 48, height: 48, borderRadius: 24, backgroundColor: palette.dangerSoft, alignItems: 'center', justifyContent: 'center' },
-  iconText: { color: palette.danger, fontSize: 22, fontWeight: '900' },
-  title: { color: palette.navy, fontSize: 18, fontWeight: '800', marginTop: 14, textAlign: 'center' },
-  message: { color: palette.muted, fontSize: 13, lineHeight: 19, marginTop: 6, textAlign: 'center' },
-  retry: { alignSelf: 'stretch' },
-  banner: { backgroundColor: palette.dangerSoft, borderRadius: 12, padding: 13, marginTop: 16 },
-  bannerText: { color: '#B23A45', fontSize: 13, lineHeight: 19, fontWeight: '600' },
-});
+/** Amber notice box ("All four documents below are mandatory…", "Next Steps"). */
+export function NoticeBox({ title, children, tone = 'amber' }: { title?: string; children: ReactNode; tone?: 'amber' | 'blue' }) {
+  const blue = tone === 'blue';
+  return (
+    <View style={[styles.notice, blue && styles.noticeBlue]}>
+      <Icon name={blue ? 'info' : 'alert-circle'} size={17} color={blue ? palette.blue : palette.amber} />
+      <View style={styles.noticeCopy}>
+        {title ? <Text style={[styles.noticeTitle, blue && styles.noticeTitleBlue]}>{title}</Text> : null}
+        {typeof children === 'string' ? <Text style={[styles.noticeText, blue && styles.noticeTextBlue]}>{children}</Text> : children}
+      </View>
+    </View>
+  );
+}

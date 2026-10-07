@@ -24,6 +24,7 @@ interface SignInInput {
 interface RegisterInput {
   name: string;
   email: string;
+  phone: string;
   password: string;
   passwordConfirmation: string;
 }

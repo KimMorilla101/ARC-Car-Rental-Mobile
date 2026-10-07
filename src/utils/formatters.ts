@@ -13,10 +13,6 @@ export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(LOCALE, { month: 'short', day: '2-digit', year: 'numeric' });
 }
 
-export function formatLongDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(LOCALE, { month: 'long', day: '2-digit', year: 'numeric' });
-}
-
 export function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hour12: true });
 }
@@ -42,13 +38,6 @@ export function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('');
-}
-
-export function greeting(date = new Date()): string {
-  const hour = date.getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
 }
 
 export const bookingStatusLabel: Record<BookingStatus, string> = {
@@ -99,3 +88,17 @@ export const extensionStatusLabel: Record<ExtensionStatus, string> = {
   approved: 'Extension approved',
   declined: 'Extension declined',
 };
+
+/** "September 10" (no year), for compact cards. */
+export function formatMonthDay(iso: string): string {
+  return new Date(iso).toLocaleDateString(LOCALE, { month: 'long', day: 'numeric' });
+}
+
+/** "September 10, 2026" */
+export function formatFullDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(LOCALE, { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+export function plural(count: number, unit: string): string {
+  return `${count} ${unit}${count === 1 ? '' : 's'}`;
+}

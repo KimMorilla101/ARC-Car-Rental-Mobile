@@ -1,8 +1,16 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
-import { ChoiceChip } from '@/components/common/ChoiceChip';
-import { palette } from '@/constants/theme';
+import { Icon, type IconName } from '@/components/common/Icon';
+import { palette, text } from '@/constants/theme';
 import type { PaymentMethod, PaymentMethodOption } from '@/types/payment';
+
+import { styles } from './PaymentMethodSelector.styles';
+
+const methodIcon: Record<PaymentMethod, IconName> = {
+  cash: 'dollar-sign',
+  online: 'smartphone',
+  bank_transfer: 'credit-card',
+};
 
 interface PaymentMethodSelectorProps {
   options: PaymentMethodOption[];
@@ -15,31 +23,46 @@ interface PaymentMethodSelectorProps {
 export function PaymentMethodSelector({ options, value, onChange, error }: PaymentMethodSelectorProps) {
   const selected = options.find((option) => option.method === value);
   return (
-    <View accessibilityRole="radiogroup">
-      <View style={styles.list}>
-        {options.map((option) => (
-          <ChoiceChip key={option.method} shape="card" label={option.label} active={value === option.method} onPress={() => onChange(option.method)} />
-        ))}
+    <View>
+      <View accessibilityRole="radiogroup" style={styles.list}>
+        {options.map((option) => {
+          const active = value === option.method;
+          return (
+            <Pressable
+              key={option.method}
+              onPress={() => onChange(option.method)}
+              style={[styles.option, active && styles.optionActive]}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: active }}>
+              <View style={[styles.icon, active && styles.iconActive]}>
+                <Icon name={methodIcon[option.method]} size={18} color={active ? palette.white : palette.blue} />
+              </View>
+              <View style={styles.copy}>
+                <Text style={styles.label}>{option.label}</Text>
+                <Text style={styles.description}>{option.description}</Text>
+              </View>
+              <View style={[styles.radio, active && styles.radioActive]}>{active && <View style={styles.radioDot} />}</View>
+            </Pressable>
+          );
+        })}
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {selected && (
-        <View style={selected.requiresProof ? styles.info : styles.cashNotice}>
-          <Text style={selected.requiresProof ? styles.infoTitle : styles.cashTitle}>{selected.label}</Text>
-          <Text style={selected.requiresProof ? styles.infoText : styles.cashText}>{selected.description}</Text>
-          {selected.instructions && <Text style={styles.infoText}>{selected.instructions}</Text>}
+      {selected && selected.accounts.length > 0 && (
+        <View style={styles.accounts}>
+          <Text style={text.label}>SEND YOUR PAYMENT TO</Text>
+          {selected.accounts.map((account) => (
+            <View key={`${account.provider}-${account.accountNumber}`} style={styles.account}>
+              <Text style={styles.provider}>{account.provider}</Text>
+              <View style={styles.accountCopy}>
+                <Text style={styles.accountNumber} selectable>
+                  {account.accountNumber}
+                </Text>
+                <Text style={styles.accountName}>{account.accountName}</Text>
+              </View>
+            </View>
+          ))}
         </View>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  list: { gap: 8 },
-  error: { color: palette.danger, fontSize: 12, fontWeight: '600', marginTop: 6 },
-  info: { backgroundColor: palette.blueSoft, borderRadius: 13, padding: 14, marginTop: 12 },
-  infoTitle: { color: palette.blue, fontSize: 13, fontWeight: '900' },
-  infoText: { color: palette.ink, fontSize: 11, lineHeight: 17, marginTop: 4 },
-  cashNotice: { backgroundColor: palette.amberSoft, borderRadius: 13, padding: 14, marginTop: 12 },
-  cashTitle: { color: palette.amber, fontSize: 13, fontWeight: '900' },
-  cashText: { color: palette.amberText, fontSize: 11, lineHeight: 17, marginTop: 4 },
-});

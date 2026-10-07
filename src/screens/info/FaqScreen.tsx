@@ -1,52 +1,56 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { Icon } from '@/components/common/Icon';
+import { IconTile } from '@/components/common/IconTile';
+import { BackLink, PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
-import { TopBar } from '@/components/common/TopBar';
+import { SearchField } from '@/components/common/SearchField';
 import { palette } from '@/constants/theme';
 
-// Static help content from the Figma design. Move to the API if ARC wants to edit it without app updates.
-const questions: [string, string][] = [
-  ['What documents are required?', 'A valid driver’s license, primary valid ID, proof of billing, and ₱1,000 down-payment proof.'],
-  ['When is my booking confirmed?', 'Online and bank-transfer bookings remain Pending Verification until ARC verifies the payment and documents. Cash bookings stay pending until payment is confirmed.'],
-  ['Can I extend my rental?', 'Request an hourly, daily, or monthly extension before the original return date and fixed return time. Every request requires ARC approval.'],
-  ['What happens after the return deadline?', 'Return Vehicle Mode activates. Expired rentals cannot be extended; return the vehicle and create a new booking if you want to rent again.'],
-  ['What is the car wash fee?', 'A fixed predefined car wash fee is shown separately in your pricing summary. It does not depend on how dirty the vehicle is.'],
-  ['What is my Trust Score?', 'Your Trust Score reflects your rental history and performance. It is managed by ARC Car Rental and can only be viewed by you.'],
-];
+import { faqSections } from './faqContent';
+import { styles } from './FaqScreen.styles';
 
 export default function FaqScreen() {
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const query = search.trim().toLowerCase();
+
+  const sections = faqSections
+    .map((section) => ({ ...section, items: section.items.filter(([question, answer]) => !query || `${question} ${answer}`.toLowerCase().includes(query)) }))
+    .filter((section) => section.items.length > 0);
+
   return (
     <Screen>
-      <TopBar back title="FAQ" />
-      <ScrollView contentContainerStyle={screenStyles.stackScroll}>
-        <Text style={screenStyles.title}>Frequently asked questions</Text>
-        <Text style={[screenStyles.subtitle, styles.subtitle]}>Everything you need to know about renting with ARC.</Text>
-        {questions.map(([question, answer], index) => (
-          <Pressable
-            key={question}
-            style={styles.item}
-            onPress={() => setOpen(open === index ? null : index)}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: open === index }}>
-            <View style={styles.row}>
-              <Text style={styles.question}>{question}</Text>
-              <Text style={styles.icon}>{open === index ? '−' : '+'}</Text>
+      <ScrollView contentContainerStyle={screenStyles.stackScroll} keyboardShouldPersistTaps="handled">
+        <BackLink />
+        <PageHeader title="Help Center" subtitle="Everything you need to know about renting with ARC." />
+        <View style={styles.search}>
+          <SearchField value={search} onChangeText={setSearch} placeholder="Search questions" />
+        </View>
+        {sections.length === 0 && <Text style={styles.empty}>No questions match “{search}”.</Text>}
+        {sections.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <IconTile name={section.icon} color={palette.blue} background={palette.blueSoft} size={32} />
+              <Text style={styles.sectionTitle}>{section.title}</Text>
             </View>
-            {open === index && <Text style={styles.answer}>{answer}</Text>}
-          </Pressable>
+            {section.items.map(([question, answer]) => {
+              const key = `${section.title}:${question}`;
+              const expanded = open === key || !!query;
+              return (
+                <Pressable key={key} style={styles.item} onPress={() => setOpen(open === key ? null : key)} accessibilityRole="button" accessibilityState={{ expanded }}>
+                  <View style={styles.row}>
+                    <Text style={styles.question}>{question}</Text>
+                    <Icon name={expanded ? 'minus' : 'plus'} size={18} color={palette.blue} />
+                  </View>
+                  {expanded && <Text style={styles.answer}>{answer}</Text>}
+                </Pressable>
+              );
+            })}
+          </View>
         ))}
       </ScrollView>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  subtitle: { marginBottom: 20 },
-  item: { backgroundColor: palette.white, borderRadius: 15, padding: 16, marginTop: 10, borderWidth: 1, borderColor: palette.border },
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  question: { color: palette.navy, fontSize: 14, fontWeight: '800', flex: 1 },
-  icon: { color: palette.blue, fontSize: 20, fontWeight: '800' },
-  answer: { color: palette.muted, fontSize: 13, lineHeight: 20, marginTop: 10 },
-});

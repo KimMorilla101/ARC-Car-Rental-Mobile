@@ -1,15 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { Button } from '@/components/common/Button';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { FormField } from '@/components/common/FormField';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { Icon } from '@/components/common/Icon';
 import { palette } from '@/constants/theme';
 import { useSubmit } from '@/hooks/useSubmit';
 import { authApi } from '@/services/authApi';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
 import { rules, validate } from '@/utils/validation';
+
+import { styles } from './PasswordResetForm.styles';
 
 const FIELDS = ['email'] as const;
 
@@ -35,10 +38,12 @@ export function PasswordResetForm() {
   if (sent) {
     return (
       <View style={styles.success} accessibilityLiveRegion="polite">
-        <Text style={styles.check}>✓</Text>
+        <View style={styles.check}>
+          <Icon name="mail" size={26} color={palette.green} />
+        </View>
         <Text style={styles.successTitle}>Check your email</Text>
         <Text style={styles.successText}>If an ARC Ride account uses {email.trim()}, we sent a link to reset your password.</Text>
-        <PrimaryButton label="Back to sign in" onPress={() => router.replace('/login')} style={styles.stretch} />
+        <Button label="Back to Login" onPress={() => router.replace('/login')} style={styles.stretch} />
       </View>
     );
   }
@@ -48,10 +53,11 @@ export function PasswordResetForm() {
       <ErrorMessage message={getFormError(error, FIELDS)} />
       <FormField
         label="Email address"
+        icon="mail"
         placeholder="you@example.com"
         value={email}
-        onChangeText={(text) => {
-          setEmail(text);
+        onChangeText={(value) => {
+          setEmail(value);
           setEmailError(undefined);
           reset();
         }}
@@ -63,16 +69,7 @@ export function PasswordResetForm() {
         returnKeyType="send"
         onSubmitEditing={onSubmit}
       />
-      <PrimaryButton label="Send reset link" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />
+      <Button label="Send Reset Link" icon="send" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  submit: { marginTop: 28 },
-  success: { alignItems: 'center', paddingVertical: 20 },
-  check: { width: 58, height: 58, borderRadius: 29, backgroundColor: '#DDF7ED', color: palette.green, textAlign: 'center', lineHeight: 58, fontSize: 28, fontWeight: '900', overflow: 'hidden' },
-  successTitle: { color: palette.navy, fontSize: 22, fontWeight: '900', marginTop: 14 },
-  successText: { color: palette.muted, fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 8 },
-  stretch: { alignSelf: 'stretch' },
-});

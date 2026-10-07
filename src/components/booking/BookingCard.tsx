@@ -1,51 +1,54 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
+import { Icon } from '@/components/common/Icon';
 import { Pill } from '@/components/common/Pill';
 import { palette } from '@/constants/theme';
 import type { Booking } from '@/types/booking';
-import { bookingStatusLabel, formatDateTime, formatPeso } from '@/utils/formatters';
+import { bookingStatusLabel, formatFullDate, formatPeso, plural } from '@/utils/formatters';
 
-import { bookingStatusTone } from './bookingStatusTone';
+import { bookingStatusTone, paymentBadge } from './bookingStatusTone';
+import { styles } from './BookingCard.styles';
 
-/** Booking list item used on the Bookings tab. */
+/** Booking card on the My Bookings tab. */
 export function BookingCard({ booking }: { booking: Booking }) {
   const router = useRouter();
+  const payment = paymentBadge[booking.payment.status];
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       onPress={() => router.push({ pathname: '/booking/[id]', params: { id: String(booking.id) } })}
       accessibilityRole="button"
       accessibilityLabel={`${booking.vehicle.name}, ${bookingStatusLabel[booking.status]}`}>
-      <Image source={{ uri: booking.vehicle.imageUrl }} style={styles.image} contentFit="cover" transition={200} />
-      <View style={styles.body}>
-        <View style={styles.top}>
-          <Text style={styles.reference}>{booking.reference}</Text>
-          <Pill tone={bookingStatusTone(booking.status)}>{bookingStatusLabel[booking.status]}</Pill>
+      <View style={styles.row}>
+        <Image source={{ uri: booking.vehicle.imageUrl }} style={styles.image} contentFit="cover" />
+        <View style={styles.copy}>
+          <View style={styles.top}>
+            <Text style={styles.reference}>{booking.reference}</Text>
+            <Pill tone={bookingStatusTone(booking.status)}>{bookingStatusLabel[booking.status]}</Pill>
+          </View>
+          <Text style={styles.name}>{booking.vehicle.name}</Text>
+          <View style={styles.dateRow}>
+            <Icon name="calendar" size={12} color={palette.muted} />
+            <Text style={styles.date}>{formatFullDate(booking.pickupAt)}</Text>
+            <Icon name="arrow-right" size={12} color={palette.mutedLight} />
+          </View>
+          <View style={styles.dateRow}>
+            <Icon name="calendar" size={12} color={palette.muted} />
+            <Text style={styles.date}>{formatFullDate(booking.returnAt)}</Text>
+            <Icon name="truck" size={12} color={palette.muted} />
+            <Text style={styles.date}>{plural(booking.rentalDays, 'day')}</Text>
+          </View>
         </View>
-        <Text style={styles.name}>{booking.vehicle.name}</Text>
-        <Text style={styles.meta}>{formatDateTime(booking.pickupAt)}</Text>
-        <Text style={styles.meta}>⌖ {booking.pickupLocation}</Text>
-        <View style={styles.bottom}>
-          <Text style={styles.total}>{formatPeso(booking.pricing.total)} total</Text>
-          <Text style={styles.details}>Details ›</Text>
-        </View>
+      </View>
+      <View style={styles.bottom}>
+        <Text style={styles.total}>{formatPeso(booking.pricing.total)}</Text>
+        <Pill tone={payment.tone}>{payment.label}</Pill>
+        <View style={styles.spacer} />
+        <Text style={styles.view}>View</Text>
+        <Icon name="chevron-right" size={15} color={palette.blue} />
       </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { backgroundColor: palette.white, borderRadius: 18, overflow: 'hidden', marginBottom: 16, borderWidth: 1, borderColor: palette.border },
-  pressed: { opacity: 0.8 },
-  image: { width: '100%', height: 150 },
-  body: { padding: 15 },
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  reference: { color: palette.muted, fontSize: 10, fontWeight: '800' },
-  name: { color: palette.navy, fontSize: 18, fontWeight: '900', marginTop: 11 },
-  meta: { color: palette.muted, fontSize: 12, marginTop: 6 },
-  bottom: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15, paddingTop: 12, borderTopWidth: 1, borderTopColor: palette.divider },
-  total: { color: palette.navy, fontWeight: '800', fontSize: 13 },
-  details: { color: palette.blue, fontWeight: '800', fontSize: 12 },
-});

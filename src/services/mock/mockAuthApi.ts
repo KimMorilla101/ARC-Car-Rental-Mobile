@@ -16,12 +16,12 @@ export const mockAuthApi: AuthApi = {
     return { token: `${MOCK_TOKEN_PREFIX}${user.id}`, user: publicUser(user) };
   },
 
-  async register({ name, email, password }) {
+  async register({ name, email, phone, password }) {
     await mockDelay(null, 900);
     if (mockUsers.some((item) => item.email.toLowerCase() === email.trim().toLowerCase())) {
       throw mockValidationError('email', 'The email has already been taken.');
     }
-    const user = { id: mockUsers.length + 1, name: name.trim(), email: email.trim(), password, phone: null, address: null, avatarUrl: null, trustScore: null };
+    const user = { id: mockUsers.length + 1, name: name.trim(), email: email.trim(), password, phone, address: null, avatarUrl: null, trustScore: null };
     mockUsers.push(user);
     return { token: `${MOCK_TOKEN_PREFIX}${user.id}`, user: publicUser(user) };
   },

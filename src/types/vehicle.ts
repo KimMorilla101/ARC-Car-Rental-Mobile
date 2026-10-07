@@ -1,6 +1,6 @@
 import type { Id, IsoDateTime } from './api';
 
-export type VehicleCategory = 'SUV' | 'Sedan' | 'MPV' | 'Hatchback' | 'Pickup';
+export type VehicleCategory = 'Sedan' | 'SUV' | 'MPV' | 'Pickup' | 'Luxury' | 'Hatchback';
 export type Transmission = 'Automatic' | 'Manual';
 export type FuelType = 'Gasoline' | 'Diesel' | 'Hybrid' | 'Electric';
 
@@ -22,6 +22,9 @@ export interface Vehicle {
   transmission: Transmission;
   fuel: FuelType;
   rating: number | null;
+  reviewCount: number;
+  /** Shown as the "Popular" badge. */
+  isPopular: boolean;
   description: string;
   features: string[];
   /** Units free for the requested window (or right now, when no window is given). */
@@ -30,7 +33,7 @@ export interface Vehicle {
   matchScore: number | null;
 }
 
-export type VehicleSort = 'recommended' | 'price_asc' | 'price_desc' | 'rating' | 'seats';
+export type VehicleSort = 'recommended' | 'price_asc' | 'price_desc' | 'popular' | 'rating';
 
 export interface VehicleFilters {
   search?: string;
@@ -47,7 +50,6 @@ export interface VehicleFilters {
 }
 
 export interface HomeFeed {
+  featured: Vehicle[];
   recommended: Vehicle[];
-  popular: Vehicle[];
-  newArrivals: Vehicle[];
 }

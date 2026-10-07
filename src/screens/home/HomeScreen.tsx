@@ -1,35 +1,31 @@
 import { useRouter } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
-import { CurrentBookingCard } from '@/components/dashboard/CurrentBookingCard';
-import { NotificationItem } from '@/components/dashboard/NotificationPreview';
-import { SearchCard } from '@/components/dashboard/SearchCard';
-import { TrustScoreCard } from '@/components/dashboard/TrustScoreCard';
-import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader';
-import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorState } from '@/components/common/ErrorMessage';
+import { FocusAwareStatusBar } from '@/components/common/FocusAwareStatusBar';
+import { Icon } from '@/components/common/Icon';
 import { Skeleton, VehicleCardSkeleton } from '@/components/common/LoadingSkeleton';
-import { Screen, screenStyles } from '@/components/common/Screen';
+import { Screen } from '@/components/common/Screen';
 import { SectionTitle } from '@/components/common/SectionTitle';
-import { TopBar } from '@/components/common/TopBar';
+import { ActiveRentalCard } from '@/components/dashboard/ActiveRentalCard';
+import { BookingRow } from '@/components/dashboard/BookingRow';
+import { HomeHero } from '@/components/dashboard/HomeHero';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { SearchCard } from '@/components/dashboard/SearchCard';
+import { WhyArcSection } from '@/components/dashboard/WhyArcSection';
 import { VehicleCard } from '@/components/vehicles/VehicleCard';
-import { gutter, palette } from '@/constants/theme';
+import { palette } from '@/constants/theme';
 import { useRefetchOnFocus } from '@/hooks/useApiQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { useBookings } from '@/hooks/useBookings';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useHomeFeed } from '@/hooks/useVehicles';
 import type { Booking } from '@/types/booking';
-import type { Vehicle } from '@/types/vehicle';
 
-/** The booking to feature on Home: an overdue or active rental first, then the next upcoming one. */
-function pickCurrentBooking(bookings: Booking[]): Booking | undefined {
-  const byPriority = (statuses: Booking['status'][]) => bookings.find((item) => statuses.includes(item.status));
-  const upcoming = bookings
-    .filter((item) => ['pending', 'pending_verification', 'confirmed'].includes(item.status))
-    .sort((a, b) => a.pickupAt.localeCompare(b.pickupAt));
-  return byPriority(['return_due']) ?? byPriority(['active']) ?? upcoming[0];
-}
+import { styles } from './HomeScreen.styles';
+
+const UPCOMING: Booking['status'][] = ['pending', 'pending_verification', 'confirmed'];
+const FINISHED: Booking['status'][] = ['returned', 'completed'];
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -38,13 +34,16 @@ export default function HomeScreen() {
   const bookings = useBookings('all');
   const notifications = useNotifications();
   useRefetchOnFocus(bookings.refetch);
-  useRefetchOnFocus(notifications.refetch);
 
   if (!user) return null;
 
-  const current = bookings.data ? pickCurrentBooking(bookings.data) : undefined;
-  const unread = notifications.data?.filter((item) => !item.readAt).slice(0, 2) ?? [];
-  const refreshing = feed.isRefreshing || bookings.isRefreshing || notifications.isRefreshing;
+  const list = bookings.data ?? [];
+  // Overdue rentals come first so "Return Vehicle" is impossible to miss.
+  const active = list.find((item) => item.status === 'return_due') ?? list.find((item) => item.status === 'active');
+  const upcoming = list.filter((item) => UPCOMING.includes(item.status)).sort((a, b) => a.pickupAt.localeCompare(b.pickupAt)).slice(0, 2);
+  const recent = list.filter((item) => FINISHED.includes(item.status)).slice(0, 2);
+  const firstName = user.name.split(' ')[0];
+
   const refreshAll = () => {
     feed.refresh();
     bookings.refresh();
@@ -52,103 +51,73 @@ export default function HomeScreen() {
   };
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <TopBar
-        action={
-          <Pressable onPress={() => router.push('/notifications')} hitSlop={10} accessibilityRole="button" accessibilityLabel={`Notifications, ${notifications.unreadCount} unread`}>
-            <Text style={styles.bell}>◌</Text>
-            {notifications.unreadCount > 0 && <View style={styles.badge} />}
-          </Pressable>
-        }
-      />
+    <Screen edges={['left', 'right']}>
+      <FocusAwareStatusBar style="light" />
       <ScrollView
-        contentContainerStyle={screenStyles.tabScroll}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshAll} tintColor={palette.blue} />}>
-        <WelcomeHeader name={user.name} />
-        <SearchCard />
-        <TrustScoreCard score={user.trustScore} />
+        refreshControl={<RefreshControl refreshing={feed.isRefreshing || bookings.isRefreshing} onRefresh={refreshAll} tintColor={palette.white} />}>
+        <HomeHero />
+        <View style={styles.content}>
+          <SearchCard />
 
-        <SectionTitle title="Your current rental" action="View all" onPress={() => router.push('/bookings')} />
-        {bookings.isLoading ? (
-          <Skeleton height={136} radius={18} />
-        ) : bookings.error ? (
-          <ErrorState error={bookings.error} onRetry={bookings.refetch} />
-        ) : current ? (
-          <CurrentBookingCard booking={current} />
-        ) : (
-          <EmptyState title="No upcoming trips" message="Book a car and your rental will show up here." actionLabel="Browse cars" onAction={() => router.push('/browse')} />
-        )}
+          <Text style={styles.welcome}>Welcome back, {firstName}! 👋</Text>
+          <Text style={styles.welcomeSub}>Your next adventure is one booking away.</Text>
+          <View style={styles.shortcuts}>
+            <Shortcut icon="truck" label="Browse Cars" primary onPress={() => router.push('/browse')} />
+            <Shortcut icon="book-open" label="My Bookings" onPress={() => router.push('/bookings')} />
+          </View>
 
-        {unread.length > 0 && (
-          <>
-            <SectionTitle title="Latest updates" action="See all" onPress={() => router.push('/notifications')} />
-            {unread.map((item) => (
-              <NotificationItem key={item.id} notification={item} />
-            ))}
-          </>
-        )}
+          {bookings.isLoading ? (
+            <Skeleton height={130} radius={18} style={styles.gap} />
+          ) : bookings.error ? (
+            <ErrorState error={bookings.error} onRetry={bookings.refetch} title="Could not load your bookings" />
+          ) : (
+            <>
+              {active && <ActiveRentalCard booking={active} />}
+              {upcoming.length > 0 && (
+                <>
+                  <SectionTitle title="Upcoming Bookings" action="View All" onPress={() => router.push('/bookings')} />
+                  {upcoming.map((item) => (
+                    <BookingRow key={item.id} booking={item} />
+                  ))}
+                </>
+              )}
+            </>
+          )}
 
-        {feed.isLoading ? (
-          <>
-            <SectionTitle title="Recommended for you" />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontal} contentContainerStyle={styles.horizontalContent}>
-              <VehicleCardSkeleton compact />
-              <VehicleCardSkeleton compact />
-            </ScrollView>
-          </>
-        ) : feed.error ? (
-          <ErrorState error={feed.error} onRetry={feed.refetch} title="Could not load cars" />
-        ) : feed.data ? (
-          <>
-            <VehicleRow title="Recommended for you" vehicles={feed.data.recommended} onSeeAll={() => router.push({ pathname: '/browse', params: { sort: 'recommended' } })} />
-            <VehicleRow title="Popular with renters" vehicles={feed.data.popular} onSeeAll={() => router.push({ pathname: '/browse', params: { sort: 'rating' } })} />
-            <VehicleRow title="New in the fleet" vehicles={feed.data.newArrivals} onSeeAll={() => router.push('/browse')} />
-          </>
-        ) : null}
+          <SectionTitle display title="Featured Vehicles" subtitle="Hand-picked from our premium fleet" action="Browse All" onPress={() => router.push('/browse')} />
+          {feed.isLoading ? (
+            <VehicleCardSkeleton />
+          ) : feed.error ? (
+            <ErrorState error={feed.error} onRetry={feed.refetch} title="Could not load cars" />
+          ) : (
+            feed.data?.featured.map((vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} variant="featured" />)
+          )}
 
-        <SectionTitle title="Quick actions" />
-        <View style={styles.quickRow}>
-          <QuickAction icon="⌕" label="Browse cars" onPress={() => router.push('/browse')} />
-          <QuickAction icon="☆" label="Smart match" onPress={() => router.push({ pathname: '/browse', params: { sort: 'recommended' } })} />
-          <QuickAction icon="?" label="Help center" onPress={() => router.push('/faq')} />
+          <QuickActions bookingCount={bookings.data ? bookings.data.length : null} />
+
+          {recent.length > 0 && (
+            <>
+              <SectionTitle title="Recent Rentals" action="View All" onPress={() => router.push('/bookings')} />
+              {recent.map((item) => (
+                <BookingRow key={item.id} booking={item} showRange />
+              ))}
+            </>
+          )}
+
+          <WhyArcSection />
         </View>
       </ScrollView>
     </Screen>
   );
 }
 
-function VehicleRow({ title, vehicles, onSeeAll }: { title: string; vehicles: Vehicle[]; onSeeAll: () => void }) {
-  if (vehicles.length === 0) return null;
+function Shortcut({ icon, label, primary = false, onPress }: { icon: 'truck' | 'book-open'; label: string; primary?: boolean; onPress: () => void }) {
   return (
-    <>
-      <SectionTitle title={title} action="See all" onPress={onSeeAll} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontal} contentContainerStyle={styles.horizontalContent}>
-        {vehicles.map((vehicle) => (
-          <VehicleCard key={vehicle.id} vehicle={vehicle} compact />
-        ))}
-      </ScrollView>
-    </>
-  );
-}
-
-function QuickAction({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.quickItem, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={label}>
-      <Text style={styles.quickIcon}>{icon}</Text>
-      <Text style={styles.quickLabel}>{label}</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.shortcut, primary && styles.shortcutPrimary, pressed && styles.pressed]} accessibilityRole="button">
+      <Icon name={icon} size={16} color={primary ? palette.blue : palette.ink} />
+      <Text style={[styles.shortcutText, primary && styles.shortcutTextPrimary]}>{label}</Text>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  bell: { color: palette.navy, fontSize: 27 },
-  badge: { position: 'absolute', top: 2, right: 0, width: 9, height: 9, borderRadius: 5, backgroundColor: palette.danger, borderWidth: 1.5, borderColor: palette.canvas },
-  horizontal: { marginHorizontal: -gutter },
-  horizontalContent: { paddingLeft: gutter, paddingRight: gutter - 14 },
-  quickRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  quickItem: { flex: 1, backgroundColor: palette.white, borderRadius: 15, padding: 13, borderWidth: 1, borderColor: palette.border },
-  quickIcon: { color: palette.blue, fontSize: 22 },
-  quickLabel: { color: palette.navy, fontSize: 11, fontWeight: '800', marginTop: 12 },
-  pressed: { opacity: 0.78 },
-});

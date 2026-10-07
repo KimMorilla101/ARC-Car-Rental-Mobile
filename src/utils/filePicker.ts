@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import type { UploadFile } from '@/types/api';
 
 /** Client-side limit for quick feedback; Laravel must enforce its own max file size and MIME types. */
-export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 export type PickResult = { file: UploadFile } | { canceled: true } | { error: string };
 

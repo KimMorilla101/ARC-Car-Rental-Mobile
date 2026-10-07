@@ -7,18 +7,21 @@ export type ExtensionStatus = 'pending' | 'approved' | 'declined';
 export interface Extension {
   id: Id;
   type: ExtensionType;
+  quantity: number;
   requestedReturnAt: IsoDateTime;
   fee: number;
   status: ExtensionStatus;
   createdAt: IsoDateTime;
 }
 
-/** One selectable extension, priced by the backend for a specific booking. */
+/** One extension type with its rate for this booking's vehicle. */
 export interface ExtensionOption {
   type: ExtensionType;
-  durationLabel: string;
-  fee: number;
-  requestedReturnAt: IsoDateTime;
+  /** Price of one unit (one hour, day or month). */
+  unitFee: number;
+  /** "hour", "day" or "month", for labels like "2 days". */
+  unitLabel: string;
+  maxQuantity: number;
 }
 
 export interface ExtensionOptions {
@@ -30,6 +33,7 @@ export interface ExtensionOptions {
 
 export interface ExtensionRequestPayload {
   type: ExtensionType;
+  quantity: number;
 }
 
 export interface ReturnSummary {
@@ -37,5 +41,5 @@ export interface ReturnSummary {
   delayedHours: number;
   lateFeePerHour: number;
   estimatedLateFee: number;
-  shopAddress: string;
+  returnLocation: string;
 }

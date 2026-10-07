@@ -1,25 +1,31 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, SectionList, Text, View } from 'react-native';
 
-import { NotificationItem } from '@/components/dashboard/NotificationPreview';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorMessage, ErrorState } from '@/components/common/ErrorMessage';
 import { NotificationListSkeleton } from '@/components/common/LoadingSkeleton';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
-import { TopBar } from '@/components/common/TopBar';
+import { NotificationItem } from '@/components/dashboard/NotificationPreview';
 import { palette } from '@/constants/theme';
-import { useRefetchOnFocus } from '@/hooks/useApiQuery';
 import { useNotifications } from '@/hooks/useNotifications';
 import type { AppNotification } from '@/types/notification';
 import { getErrorMessage } from '@/utils/errorHandler';
 
+import { styles } from './NotificationsScreen.styles';
+
 export default function NotificationsScreen() {
   const router = useRouter();
   const notifications = useNotifications();
-  useRefetchOnFocus(notifications.refetch);
   const [actionError, setActionError] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
+
+  const list = notifications.error ? [] : (notifications.data ?? []);
+  const sections = [
+    { title: 'NEW', data: list.filter((item) => !item.readAt) },
+    { title: 'EARLIER', data: list.filter((item) => item.readAt) },
+  ].filter((section) => section.data.length > 0);
 
   const open = async (item: AppNotification) => {
     setActionError(null);
@@ -48,10 +54,11 @@ export default function NotificationsScreen() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <TopBar title="Notifications" />
-      <FlatList
-        data={notifications.error ? [] : (notifications.data ?? [])}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => String(item.id)}
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section }) => <Text style={styles.sectionHeader}>{section.title}</Text>}
         renderItem={({ item }) => (
           <Pressable onPress={() => open(item)} accessibilityRole="button" accessibilityLabel={`${item.readAt ? '' : 'Unread. '}${item.title}. ${item.body}`}>
             <NotificationItem notification={item} />
@@ -62,17 +69,17 @@ export default function NotificationsScreen() {
         refreshControl={<RefreshControl refreshing={notifications.isRefreshing} onRefresh={notifications.refresh} tintColor={palette.blue} />}
         ListHeaderComponent={
           <View>
-            <View style={styles.headingRow}>
-              <View style={styles.headingCopy}>
-                <Text style={screenStyles.title}>Your updates</Text>
-                <Text style={screenStyles.subtitle}>Booking, payment, rental, and extension updates.</Text>
-              </View>
-              {notifications.unreadCount > 0 && (
-                <Pressable onPress={markAll} disabled={markingAll} hitSlop={8} accessibilityRole="button">
-                  <Text style={[styles.markAll, markingAll && styles.disabled]}>{markingAll ? 'Marking…' : 'Mark all read'}</Text>
-                </Pressable>
-              )}
-            </View>
+            <PageHeader
+              title="Notifications"
+              subtitle={notifications.data ? `${notifications.unreadCount} unread` : undefined}
+              right={
+                notifications.unreadCount > 0 ? (
+                  <Pressable onPress={markAll} disabled={markingAll} hitSlop={8} accessibilityRole="button">
+                    <Text style={[styles.markAll, markingAll && styles.disabled]}>{markingAll ? 'Marking…' : 'Mark all read'}</Text>
+                  </Pressable>
+                ) : null
+              }
+            />
             <ErrorMessage message={actionError} />
           </View>
         }
@@ -82,17 +89,10 @@ export default function NotificationsScreen() {
           ) : notifications.error ? (
             <ErrorState error={notifications.error} onRetry={notifications.refetch} />
           ) : (
-            <EmptyState title="You are all caught up" message="Booking, payment, and rental updates will appear here." />
+            <EmptyState icon="bell" title="You're all caught up" message="Booking, payment, rental, and extension updates will appear here." />
           )
         }
       />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  headingRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, marginBottom: 4 },
-  headingCopy: { flex: 1 },
-  markAll: { color: palette.blue, fontSize: 11, fontWeight: '800', marginBottom: 3 },
-  disabled: { color: palette.disabled },
-});

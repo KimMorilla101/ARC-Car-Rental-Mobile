@@ -1,24 +1,34 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
-import { palette } from '@/constants/theme';
+import { palette, text } from '@/constants/theme';
 
-export function SectionTitle({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
+import { Icon } from './Icon';
+import { styles } from './SectionTitle.styles';
+
+interface SectionTitleProps {
+  title: string;
+  subtitle?: string;
+  action?: string;
+  onPress?: () => void;
+  /** Serif heading for big home sections like "Featured Vehicles". */
+  display?: boolean;
+}
+
+export function SectionTitle({ title, subtitle, action, onPress, display = false }: SectionTitleProps) {
   return (
     <View style={styles.row}>
-      <Text style={styles.heading} accessibilityRole="header">
-        {title}
-      </Text>
+      <View style={styles.copy}>
+        <Text style={display ? styles.display : text.sectionTitle} accessibilityRole="header">
+          {title}
+        </Text>
+        {subtitle ? <Text style={[text.caption, styles.subtitle]}>{subtitle}</Text> : null}
+      </View>
       {action && (
-        <Pressable onPress={onPress} hitSlop={10} accessibilityRole="button">
-          <Text style={styles.action}>{action}</Text>
+        <Pressable onPress={onPress} hitSlop={10} accessibilityRole="button" style={styles.action}>
+          <Text style={styles.actionText}>{action}</Text>
+          <Icon name="chevron-right" size={15} color={palette.blue} />
         </Pressable>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 },
-  heading: { color: palette.navy, fontSize: 19, fontWeight: '800' },
-  action: { color: palette.blue, fontSize: 13, fontWeight: '800' },
-});

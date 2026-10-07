@@ -3,7 +3,7 @@ import { RegisterForm } from '@/components/auth/RegisterForm';
 
 export default function RegisterScreen() {
   return (
-    <AuthLayout backLabel="Back" title="Create your account" subtitle="Join ARC Ride and make your next trip feel effortless.">
+    <AuthLayout backLabel="Back to Login" title="Create Account" subtitle="Join ARC Ride and start your journey today.">
       <RegisterForm />
     </AuthLayout>
   );

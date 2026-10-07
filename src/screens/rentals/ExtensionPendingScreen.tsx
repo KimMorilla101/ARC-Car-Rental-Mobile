@@ -1,13 +1,18 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { Button } from '@/components/common/Button';
+import { Card } from '@/components/common/Card';
 import { ErrorState } from '@/components/common/ErrorMessage';
+import { Icon } from '@/components/common/Icon';
+import { InfoRow } from '@/components/common/InfoRow';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { Screen } from '@/components/common/Screen';
 import { palette } from '@/constants/theme';
 import { useBooking } from '@/hooks/useBookings';
-import { extensionTypeLabel, formatDateTime, formatPeso } from '@/utils/formatters';
+import { extensionTypeLabel, formatDateTime, formatPeso, plural } from '@/utils/formatters';
+
+import { styles } from './ExtensionPendingScreen.styles';
 
 /** Confirmation after an extension request; details are reloaded from the server's booking. */
 export default function ExtensionPendingScreen() {
@@ -28,31 +33,16 @@ export default function ExtensionPendingScreen() {
   return (
     <Screen style={styles.screen}>
       <View style={styles.icon}>
-        <Text style={styles.iconText}>✓</Text>
+        <Icon name="clock" size={32} color={palette.purple} />
       </View>
-      <Text style={styles.title}>Extension request pending</Text>
-      <Text style={styles.text}>
-        We sent your {extensionTypeLabel[extension.type].toLowerCase()} extension request. We will notify you once vehicle availability is confirmed.
-      </Text>
-      <View style={styles.summary}>
-        <Text style={styles.summaryTitle}>New requested return</Text>
-        <Text style={styles.date}>{formatDateTime(extension.requestedReturnAt)}</Text>
-        <Text style={styles.fee}>Additional cost {formatPeso(extension.fee)}</Text>
-      </View>
-      <PrimaryButton label="Back to booking" onPress={() => router.back()} style={styles.button} />
+      <Text style={styles.title}>Extension Requested</Text>
+      <Text style={styles.text}>We will notify you once ARC confirms vehicle availability and approves your request.</Text>
+      <Card style={styles.card}>
+        <InfoRow label="Type" value={`${extensionTypeLabel[extension.type]} · ${plural(extension.quantity, extension.type === 'hourly' ? 'hour' : extension.type === 'daily' ? 'day' : 'month')}`} />
+        <InfoRow label="New requested return" value={formatDateTime(extension.requestedReturnAt)} />
+        <InfoRow label="Extension fee" value={formatPeso(extension.fee)} strong />
+      </Card>
+      <Button label="Back to Booking" icon="chevron-left" onPress={() => router.back()} style={styles.button} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { padding: 25, alignItems: 'center', justifyContent: 'center' },
-  icon: { width: 66, height: 66, borderRadius: 33, backgroundColor: palette.greenSoft, alignItems: 'center', justifyContent: 'center' },
-  iconText: { color: palette.green, fontSize: 32, fontWeight: '900' },
-  title: { color: palette.navy, fontSize: 25, fontWeight: '900', textAlign: 'center', marginTop: 18 },
-  text: { color: palette.muted, textAlign: 'center', fontSize: 14, lineHeight: 22, marginTop: 9 },
-  summary: { backgroundColor: palette.white, borderRadius: 16, width: '100%', alignItems: 'center', padding: 18, marginTop: 24, borderWidth: 1, borderColor: palette.border },
-  summaryTitle: { color: palette.muted, fontSize: 11 },
-  date: { color: palette.blue, fontSize: 20, fontWeight: '900', marginTop: 6, textAlign: 'center' },
-  fee: { color: palette.muted, fontSize: 12, marginTop: 6 },
-  button: { alignSelf: 'stretch' },
-});

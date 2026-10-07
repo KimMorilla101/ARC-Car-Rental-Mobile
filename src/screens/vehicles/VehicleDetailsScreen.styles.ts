@@ -1,0 +1,38 @@
+import { StyleSheet } from 'react-native';
+
+import { palette, font, radius, shadow, gutter } from '@/constants/theme';
+
+export const styles = StyleSheet.create({
+  scroll: { paddingBottom: 24 },
+  padded: { paddingHorizontal: gutter },
+  backButton: { position: 'absolute', left: gutter, width: 40, height: 40, borderRadius: 20, backgroundColor: palette.white, alignItems: 'center', justifyContent: 'center', ...shadow.card },
+  badges: { flexDirection: 'row', gap: 8, marginTop: 18 },
+  name: { color: palette.navy, fontSize: 30, fontFamily: font.display, marginTop: 10 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
+  category: { color: palette.blue, fontSize: 14, fontFamily: font.semibold },
+  rating: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ratingText: { color: palette.navy, fontSize: 14, fontFamily: font.bold },
+  reviews: { color: palette.muted, fontSize: 13, fontFamily: font.regular },
+  specGrid: { flexDirection: 'row', gap: 8, marginTop: 18 },
+  spec: { flex: 1, alignItems: 'center', gap: 4, backgroundColor: palette.white, borderRadius: radius.md, borderWidth: 1, borderColor: palette.border, paddingVertical: 12 },
+  specValue: { color: palette.navy, fontSize: 13, fontFamily: font.bold },
+  specLabel: { color: palette.muted, fontSize: 11, fontFamily: font.regular },
+  section: { marginTop: 18 },
+  rates: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  rate: { flex: 1, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.field, paddingVertical: 12 },
+  rateHighlight: { backgroundColor: palette.blue },
+  rateLabel: { color: palette.muted, fontSize: 12, fontFamily: font.medium },
+  rateLabelHighlight: { color: palette.blueTint },
+  rateValue: { color: palette.navy, fontSize: 15, fontFamily: font.extrabold, marginTop: 2 },
+  rateValueHighlight: { color: palette.white },
+  heading: { color: palette.navy, fontSize: 18, fontFamily: font.bold, marginTop: 24, marginBottom: 10 },
+  paragraph: { color: palette.muted, fontSize: 14, lineHeight: 22, fontFamily: font.regular },
+  feature: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  featureText: { color: palette.ink, fontSize: 14, fontFamily: font.regular, flex: 1 },
+  policy: { color: palette.muted, fontSize: 13, lineHeight: 19, fontFamily: font.regular, flex: 1 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingHorizontal: gutter, paddingVertical: 12, backgroundColor: palette.white, borderTopWidth: 1, borderTopColor: palette.border },
+  footerLabel: { color: palette.muted, fontSize: 12, fontFamily: font.regular },
+  footerPrice: { color: palette.blue, fontSize: 22, fontFamily: font.extrabold },
+  footerUnit: { color: palette.muted, fontSize: 12, fontFamily: font.regular },
+  bookButton: { flex: 1, maxWidth: 200 },
+});

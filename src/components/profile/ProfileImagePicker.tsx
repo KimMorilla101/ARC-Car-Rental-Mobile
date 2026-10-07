@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { palette } from '@/constants/theme';
@@ -9,6 +9,8 @@ import { profileApi } from '@/services/profileApi';
 import { getErrorMessage } from '@/utils/errorHandler';
 import { pickImage } from '@/utils/filePicker';
 import { initials } from '@/utils/formatters';
+
+import { styles } from './ProfileImagePicker.styles';
 
 /** Avatar that uploads a new photo immediately; the avatar only changes after the server accepts it. */
 export function ProfileImagePicker() {
@@ -52,11 +54,3 @@ export function Avatar({ name, url, size = 76 }: { name: string; url: string | n
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { alignItems: 'center', marginTop: 16 },
-  overlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 28, borderBottomLeftRadius: 44, borderBottomRightRadius: 44, backgroundColor: 'rgba(16,33,58,0.6)', alignItems: 'center', justifyContent: 'center' },
-  overlayText: { color: palette.white, fontSize: 10, fontWeight: '800' },
-  initials: { backgroundColor: palette.blueSoft, alignItems: 'center', justifyContent: 'center' },
-  initialsText: { color: palette.blue, fontWeight: '900' },
-});

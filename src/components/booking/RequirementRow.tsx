@@ -1,54 +1,59 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { Icon } from '@/components/common/Icon';
+import { Pill, type PillTone } from '@/components/common/Pill';
 import { palette } from '@/constants/theme';
+
+import { styles } from './RequirementRow.styles';
 
 interface RequirementRowProps {
   label: string;
   description: string;
-  statusText: string;
-  statusTone: 'missing' | 'pending' | 'done' | 'error';
-  actionLabel?: string;
-  onAction?: () => void;
+  /** Badge in the top-right corner, e.g. "Required", "Uploaded", "Verified". */
+  badge: { label: string; tone: PillTone };
+  /** Name of the selected/uploaded file; shows the green "uploaded" box instead of the dashed one. */
+  fileName?: string | null;
+  /** Upload action; omit when the document can no longer be changed. */
+  onUpload?: () => void;
   busy?: boolean;
 }
 
-/** One required document with its status and an upload/replace action. */
-export function RequirementRow({ label, description, statusText, statusTone, actionLabel, onAction, busy }: RequirementRowProps) {
+/** Document card from the Figma "Documents" step: title, hint, status badge and a dashed upload box. */
+export function RequirementRow({ label, description, badge, fileName, onUpload, busy }: RequirementRowProps) {
   return (
-    <View style={styles.row}>
-      <View style={styles.copy}>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.description}>{description}</Text>
-        <Text style={[styles.status, toneStyles[statusTone]]}>{statusText}</Text>
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <View style={styles.copy}>
+          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.description}>{description}</Text>
+        </View>
+        <Pill tone={badge.tone}>{badge.label}</Pill>
       </View>
-      {actionLabel && onAction && (
+      {onUpload && (
         <Pressable
-          onPress={onAction}
+          onPress={onUpload}
           disabled={busy}
           accessibilityRole="button"
-          accessibilityLabel={`${actionLabel} ${label}`}
-          style={[styles.action, statusTone === 'done' && styles.actionDone]}>
-          {busy ? <ActivityIndicator size="small" color={palette.blue} /> : <Text style={styles.actionText}>{actionLabel}</Text>}
+          accessibilityLabel={fileName ? `Replace ${label}` : `Upload ${label}`}
+          style={({ pressed }) => [styles.upload, fileName ? styles.uploadDone : null, pressed && styles.pressed]}>
+          {busy ? (
+            <ActivityIndicator color={palette.blue} />
+          ) : fileName ? (
+            <>
+              <Icon name="check-circle" size={16} color={palette.greenDark} />
+              <Text style={styles.uploadDoneText} numberOfLines={1}>
+                {fileName}
+              </Text>
+              <Text style={styles.replace}>Replace</Text>
+            </>
+          ) : (
+            <>
+              <Icon name="upload" size={16} color={palette.muted} />
+              <Text style={styles.uploadText}>Upload File</Text>
+            </>
+          )}
         </Pressable>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { backgroundColor: palette.white, borderRadius: 13, borderWidth: 1, borderColor: palette.border, padding: 13, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  copy: { flex: 1 },
-  label: { color: palette.navy, fontSize: 13, fontWeight: '800' },
-  description: { color: palette.muted, fontSize: 11, marginTop: 4 },
-  status: { fontSize: 10, fontWeight: '800', marginTop: 5 },
-  action: { backgroundColor: palette.blueSoft, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 9, minWidth: 72, alignItems: 'center' },
-  actionDone: { backgroundColor: palette.greenSoft },
-  actionText: { color: palette.blue, fontSize: 11, fontWeight: '800' },
-});
-
-const toneStyles = StyleSheet.create({
-  missing: { color: '#C06B23' },
-  pending: { color: palette.blue },
-  done: { color: palette.green },
-  error: { color: palette.danger },
-});

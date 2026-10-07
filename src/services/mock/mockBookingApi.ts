@@ -3,10 +3,10 @@ import type { BookingApi } from '@/services/bookingApi';
 import type { PaymentApi } from '@/services/paymentApi';
 import type { RentalApi } from '@/services/rentalApi';
 import type { Booking, BookingListFilter, BookingQuotePayload, BookingStatus } from '@/types/booking';
-import type { ExtensionOption } from '@/types/rental';
+import type { ExtensionOption, ExtensionType } from '@/types/rental';
 
-import { MOCK_POLICY, mockAgreement, mockBookings, mockPaymentMethods, mockVehicles, requirementTemplate } from './mockDb';
-import { currentMockUser, mockDelay, mockNotFound, withoutPrivate } from './mockUtils';
+import { MOCK_POLICY, mockAgreement, mockBookings, mockLocations, mockPaymentMethods, mockVehicles, priceFor, requirementTemplate } from './mockDb';
+import { currentMockUser, mockDelay, mockNotFound, mockValidationError, withoutPrivate } from './mockUtils';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -40,15 +40,18 @@ function quote(payload: BookingQuotePayload) {
   const vehicle = mockVehicles.find((item) => String(item.id) === String(payload.vehicleId));
   if (!vehicle) throw mockNotFound();
   const duration = new Date(payload.returnAt).getTime() - new Date(payload.pickupAt).getTime();
-  if (!(duration > 0)) throw new ApiError('validation', 'The return date must be after the pickup date.', 422, { returnAt: ['The return date must be after the pickup date.'] });
+  if (!(duration > 0)) throw mockValidationError('returnAt', 'The return date must be after the pickup date.');
+  const zone = mockLocations.deliveryZones.find((item) => String(item.id) === String(payload.deliveryZoneId));
+  const branch = mockLocations.branches.find((item) => String(item.id) === String(payload.branchId));
+  if (payload.deliveryMethod === 'delivery' && !zone) throw mockValidationError('deliveryZoneId', 'Choose a delivery area.');
+  if (payload.deliveryMethod === 'shop_pickup' && !branch) throw mockValidationError('branchId', 'Choose a pickup branch.');
   const rentalDays = Math.max(1, Math.ceil(duration / DAY));
-  const rentalFee = rentalDays * vehicle.rates.daily;
-  const deliveryFee = payload.deliveryMethod === 'delivery' ? MOCK_POLICY.deliveryFee : 0;
   return {
     vehicle,
+    branch,
     rentalDays,
     available: vehicle.availableUnits > 0,
-    pricing: { rentalFee, deliveryFee, carWashFee: MOCK_POLICY.carWashFee, lateReturnFee: 0, extensionFee: 0, downPayment: MOCK_POLICY.downPayment, total: rentalFee + deliveryFee + MOCK_POLICY.carWashFee },
+    pricing: priceFor(rentalDays * vehicle.rates.daily, payload.deliveryMethod === 'delivery' ? (zone?.fee ?? 0) : 0),
   };
 }
 
@@ -64,11 +67,15 @@ export const mockBookingApi: BookingApi = {
     const user = currentMockUser();
     const own = mockBookings.filter((item) => item.userId === user.id).map(present);
     const result = filter === 'all' ? own : own.filter((item) => filterStatuses[filter].includes(item.status));
-    return mockDelay(result.sort((a, b) => b.pickupAt.localeCompare(a.pickupAt)));
+    return mockDelay(result.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
   },
 
   async show(id) {
     return mockDelay(present(findOwnBooking(id)));
+  },
+
+  async locations() {
+    return mockDelay(mockLocations, 300);
   },
 
   async quote(payload) {
@@ -80,20 +87,20 @@ export const mockBookingApi: BookingApi = {
 
   async create(payload) {
     const user = currentMockUser();
-    const { vehicle, available, pricing } = quote(payload);
-    if (!available) throw new ApiError('validation', 'No unit of this vehicle is available for those dates.', 422, { vehicleId: ['No unit is available for those dates.'] });
-    const pickup = new Date(payload.pickupAt);
-    const reference = `ARC-${pickup.toISOString().slice(2, 10).replace(/-/g, '')}-${String(mockBookings.length + 1).padStart(2, '0')}`;
+    const { vehicle, branch, rentalDays, available, pricing } = quote(payload);
+    if (!available) throw mockValidationError('vehicleId', 'No unit of this vehicle is available for those dates.');
+    const id = Math.max(...mockBookings.map((item) => Number(item.id))) + 1;
     const booking: StoredBooking = {
-      id: Math.max(...mockBookings.map((item) => Number(item.id))) + 1,
+      id,
       userId: user.id,
-      reference,
+      reference: `BK-${new Date().getFullYear()}-${String(1000 + id).slice(-4)}`,
       vehicle,
       unitLabel: null,
       pickupAt: payload.pickupAt,
       returnAt: payload.returnAt,
+      rentalDays,
       deliveryMethod: payload.deliveryMethod,
-      pickupLocation: payload.deliveryMethod === 'delivery' ? (payload.deliveryAddress ?? '') : MOCK_POLICY.shopAddress,
+      pickupLocation: payload.deliveryMethod === 'delivery' ? (payload.deliveryAddress ?? '') : (branch?.name ?? ''),
       deliveryAddress: payload.deliveryAddress,
       destination: payload.destination,
       status: 'pending',
@@ -138,16 +145,20 @@ export const mockPaymentApi: PaymentApi = {
 };
 
 function extensionOptionsFor(booking: StoredBooking): ExtensionOption[] {
-  const base = new Date(booking.returnAt);
-  const plus = (ms: number) => new Date(base.getTime() + ms).toISOString();
-  const nextMonth = new Date(base);
-  nextMonth.setMonth(nextMonth.getMonth() + 1);
   const { rates } = booking.vehicle;
   return [
-    { type: 'hourly', durationLabel: '2 hours', fee: rates.hourly * 2, requestedReturnAt: plus(2 * HOUR) },
-    { type: 'daily', durationLabel: '1 day', fee: rates.daily, requestedReturnAt: plus(DAY) },
-    { type: 'monthly', durationLabel: '1 month', fee: rates.monthly, requestedReturnAt: nextMonth.toISOString() },
+    { type: 'hourly', unitFee: rates.hourly, unitLabel: 'hour', maxQuantity: 12 },
+    { type: 'daily', unitFee: rates.daily, unitLabel: 'day', maxQuantity: 14 },
+    { type: 'monthly', unitFee: rates.monthly, unitLabel: 'month', maxQuantity: 3 },
   ];
+}
+
+function addUnits(iso: string, type: ExtensionType, quantity: number): string {
+  const date = new Date(iso);
+  if (type === 'hourly') date.setHours(date.getHours() + quantity);
+  if (type === 'daily') date.setDate(date.getDate() + quantity);
+  if (type === 'monthly') date.setMonth(date.getMonth() + quantity);
+  return date.toISOString();
 }
 
 export const mockRentalApi: RentalApi = {
@@ -156,14 +167,21 @@ export const mockRentalApi: RentalApi = {
     return mockDelay({ deadline: booking.returnAt, currentReturnAt: booking.returnAt, options: extensionOptionsFor(booking) });
   },
 
-  async requestExtension(bookingId, { type }) {
+  async requestExtension(bookingId, { type, quantity }) {
     const booking = findOwnBooking(bookingId);
-    if (!present(booking).canRequestExtension) {
-      throw new ApiError('validation', 'Extension requests are closed for this rental.', 422);
-    }
+    if (!present(booking).canRequestExtension) throw new ApiError('validation', 'Extension requests are closed for this rental.', 422);
     const option = extensionOptionsFor(booking).find((item) => item.type === type);
     if (!option) throw mockNotFound();
-    booking.extension = { id: Date.now(), type, requestedReturnAt: option.requestedReturnAt, fee: option.fee, status: 'pending', createdAt: new Date().toISOString() };
+    if (quantity < 1 || quantity > option.maxQuantity) throw mockValidationError('quantity', `Choose between 1 and ${option.maxQuantity}.`);
+    booking.extension = {
+      id: Date.now(),
+      type,
+      quantity,
+      requestedReturnAt: addUnits(booking.returnAt, type, quantity),
+      fee: option.unitFee * quantity,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
     return mockDelay(present(booking), 900);
   },
 
@@ -175,7 +193,7 @@ export const mockRentalApi: RentalApi = {
       delayedHours,
       lateFeePerHour: MOCK_POLICY.lateFeePerHour,
       estimatedLateFee: delayedHours * MOCK_POLICY.lateFeePerHour,
-      shopAddress: MOCK_POLICY.shopAddress,
+      returnLocation: booking.deliveryMethod === 'delivery' ? mockLocations.branches[0].name : booking.pickupLocation,
     });
   },
 };

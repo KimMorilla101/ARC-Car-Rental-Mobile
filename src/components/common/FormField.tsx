@@ -1,52 +1,55 @@
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { palette } from '@/constants/theme';
 
+import { Icon, type IconName } from './Icon';
+import { styles } from './FormField.styles';
+
 interface FormFieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
+  icon?: IconName;
   error?: string | null;
   helper?: string;
 }
 
-/** Labelled text input with inline validation message, in the ARC form style. */
-export function FormField({ label, error, helper, multiline, ...inputProps }: FormFieldProps) {
+/** Labelled input with a leading icon, inline validation message and a show/hide toggle for passwords. */
+export function FormField({ label, icon, error, helper, multiline, secureTextEntry, editable, ...inputProps }: FormFieldProps) {
+  const [hidden, setHidden] = useState(true);
+  const readOnly = editable === false;
   return (
-    <View>
+    <View style={styles.container}>
       <Text style={styles.label}>{label.toUpperCase()}</Text>
-      <TextInput
-        {...inputProps}
-        multiline={multiline}
-        placeholderTextColor={palette.placeholder}
-        accessibilityLabel={label}
-        accessibilityHint={error ?? helper}
-        style={[styles.input, multiline && styles.multiline, error ? styles.inputError : null, inputProps.editable === false && styles.readOnly]}
-      />
+      <View style={[styles.box, multiline && styles.boxMultiline, error ? styles.boxError : null, readOnly && styles.boxReadOnly]}>
+        {icon && (
+          <View style={multiline ? styles.iconTop : undefined}>
+            <Icon name={icon} size={17} color={palette.mutedLight} />
+          </View>
+        )}
+        <TextInput
+          {...inputProps}
+          editable={editable}
+          multiline={multiline}
+          secureTextEntry={secureTextEntry && hidden}
+          placeholderTextColor={palette.placeholder}
+          accessibilityLabel={label}
+          accessibilityHint={error ?? helper}
+          style={[styles.input, multiline && styles.inputMultiline, readOnly && styles.inputReadOnly]}
+        />
+        {secureTextEntry && (
+          <Pressable onPress={() => setHidden(!hidden)} hitSlop={10} accessibilityRole="button" accessibilityLabel={hidden ? 'Show password' : 'Hide password'}>
+            <Icon name={hidden ? 'eye' : 'eye-off'} size={17} color={palette.mutedLight} />
+          </Pressable>
+        )}
+      </View>
       {error ? (
-        <Text style={styles.error} accessibilityLiveRegion="polite">
-          {error}
-        </Text>
+        <View style={styles.messageRow} accessibilityLiveRegion="polite">
+          <Icon name="alert-circle" size={13} color={palette.danger} />
+          <Text style={styles.error}>{error}</Text>
+        </View>
       ) : helper ? (
         <Text style={styles.helper}>{helper}</Text>
       ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  label: { color: palette.label, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, marginBottom: 9, marginTop: 17 },
-  input: {
-    backgroundColor: palette.white,
-    borderRadius: 13,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    color: '#14243B',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: palette.line,
-  },
-  multiline: { minHeight: 120, textAlignVertical: 'top' },
-  inputError: { borderColor: palette.danger, backgroundColor: '#FFFBFB' },
-  readOnly: { backgroundColor: palette.divider, color: palette.muted },
-  error: { color: palette.danger, fontSize: 12, fontWeight: '600', marginTop: 6 },
-  helper: { color: palette.muted, fontSize: 11, lineHeight: 17, marginTop: 7 },
-});

@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
+import { BackLink, PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
-import { TopBar } from '@/components/common/TopBar';
 import { ProfileForm } from '@/components/profile/ProfileForm';
 import { ProfileImagePicker } from '@/components/profile/ProfileImagePicker';
 import { useAuth } from '@/hooks/useAuth';
+
+import { styles } from './EditProfileScreen.styles';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -14,9 +16,10 @@ export default function EditProfileScreen() {
 
   return (
     <Screen>
-      <TopBar back title="Edit profile" />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={screenStyles.stackScroll} keyboardShouldPersistTaps="handled">
+          <BackLink label="Profile" />
+          <PageHeader title="Edit Profile" subtitle="Keep your contact details up to date." />
           <ProfileImagePicker />
           <ProfileForm
             user={user}
@@ -30,7 +33,3 @@ export default function EditProfileScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-});

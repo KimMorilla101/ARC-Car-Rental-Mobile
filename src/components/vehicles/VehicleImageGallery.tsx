@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { ScrollView, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
-import { palette } from '@/constants/theme';
+import { styles } from './VehicleImageGallery.styles';
 
 /** Swipeable full-width photo gallery with page dots. */
 export function VehicleImageGallery({ images, name }: { images: string[]; name: string }) {
@@ -37,10 +37,3 @@ export function VehicleImageGallery({ images, name }: { images: string[]; name: 
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  image: { height: 245, backgroundColor: palette.skeleton },
-  dots: { position: 'absolute', bottom: 12, alignSelf: 'center', flexDirection: 'row', gap: 6 },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.55)' },
-  dotActive: { backgroundColor: palette.white, width: 18 },
-});

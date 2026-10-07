@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { Button } from '@/components/common/Button';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { FormField } from '@/components/common/FormField';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { useSubmit } from '@/hooks/useSubmit';
 import { profileApi } from '@/services/profileApi';
 import type { User } from '@/types/auth';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
 import { hasErrors, rules, validate } from '@/utils/validation';
+
+import { styles } from './ProfileForm.styles';
 
 const FIELDS = ['name', 'phone', 'address'] as const;
 type Field = (typeof FIELDS)[number];
@@ -37,10 +39,11 @@ export function ProfileForm({ user, onSaved }: { user: User; onSaved: (user: Use
   return (
     <View>
       <ErrorMessage message={getFormError(error, FIELDS)} />
-      <FormField label="Full name" value={values.name} onChangeText={update('name')} error={errors.name ?? serverErrors.name} autoComplete="name" autoCapitalize="words" />
-      <FormField label="Email address" value={user.email} editable={false} helper="Contact ARC Car Rental to change your email." />
+      <FormField label="Full name" icon="user" value={values.name} onChangeText={update('name')} error={errors.name ?? serverErrors.name} autoComplete="name" autoCapitalize="words" />
+      <FormField label="Email address" icon="mail" value={user.email} editable={false} helper="Contact ARC Car Rental to change your email." />
       <FormField
         label="Mobile number"
+        icon="phone"
         placeholder="09171234567"
         value={values.phone}
         onChangeText={update('phone')}
@@ -49,8 +52,8 @@ export function ProfileForm({ user, onSaved }: { user: User; onSaved: (user: Use
         autoComplete="tel"
         textContentType="telephoneNumber"
       />
-      <FormField label="Address" placeholder="City or full address" value={values.address} onChangeText={update('address')} error={serverErrors.address} autoComplete="street-address" />
-      <PrimaryButton label="Save changes" onPress={onSubmit} loading={isSubmitting} />
+      <FormField label="Address" icon="map-pin" placeholder="City or full address" value={values.address} onChangeText={update('address')} error={serverErrors.address} autoComplete="street-address" />
+      <Button label="Save Changes" icon="check" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />
     </View>
   );
 }

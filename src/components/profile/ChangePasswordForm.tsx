@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { Button } from '@/components/common/Button';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { FormField } from '@/components/common/FormField';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { useSubmit } from '@/hooks/useSubmit';
 import { profileApi } from '@/services/profileApi';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
 import { hasErrors, MIN_PASSWORD_LENGTH, rules, validate } from '@/utils/validation';
+
+import { styles } from './ChangePasswordForm.styles';
 
 const FIELDS = ['currentPassword', 'password', 'passwordConfirmation'] as const;
 type Field = (typeof FIELDS)[number];
@@ -44,9 +46,10 @@ export function ChangePasswordForm({ onChanged }: { onChanged: () => void }) {
   return (
     <View>
       <ErrorMessage message={getFormError(error, FIELDS)} />
-      <FormField label="Current password" value={values.currentPassword} onChangeText={update('currentPassword')} error={fieldError('currentPassword')} secureTextEntry autoComplete="current-password" textContentType="password" />
+      <FormField label="Current password" icon="lock" value={values.currentPassword} onChangeText={update('currentPassword')} error={fieldError('currentPassword')} secureTextEntry autoComplete="current-password" textContentType="password" />
       <FormField
         label="New password"
+        icon="lock"
         placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
         value={values.password}
         onChangeText={update('password')}
@@ -57,6 +60,7 @@ export function ChangePasswordForm({ onChanged }: { onChanged: () => void }) {
       />
       <FormField
         label="Confirm new password"
+        icon="lock"
         value={values.passwordConfirmation}
         onChangeText={update('passwordConfirmation')}
         error={fieldError('passwordConfirmation')}
@@ -65,7 +69,7 @@ export function ChangePasswordForm({ onChanged }: { onChanged: () => void }) {
         textContentType="newPassword"
         onSubmitEditing={onSubmit}
       />
-      <PrimaryButton label="Update password" onPress={onSubmit} loading={isSubmitting} />
+      <Button label="Update Password" icon="check" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />
     </View>
   );
 }

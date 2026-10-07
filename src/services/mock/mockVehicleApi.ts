@@ -6,11 +6,11 @@ import { currentMockUser, mockDelay, mockNotFound } from './mockUtils';
 
 // Sorting/filtering here only imitates what the Laravel query should do server-side.
 const sorters: Record<NonNullable<VehicleFilters['sort']>, (a: Vehicle, b: Vehicle) => number> = {
-  recommended: (a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0),
+  recommended: (a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0) || Number(b.isPopular) - Number(a.isPopular),
   price_asc: (a, b) => a.rates.daily - b.rates.daily,
   price_desc: (a, b) => b.rates.daily - a.rates.daily,
+  popular: (a, b) => b.reviewCount - a.reviewCount,
   rating: (a, b) => (b.rating ?? 0) - (a.rating ?? 0),
-  seats: (a, b) => b.seats - a.seats,
 };
 
 function applyFilters(filters: VehicleFilters): Vehicle[] {
@@ -29,7 +29,7 @@ function applyFilters(filters: VehicleFilters): Vehicle[] {
 export const mockVehicleApi: VehicleApi = {
   async list(filters) {
     currentMockUser();
-    return mockDelay(applyFilters(filters));
+    return mockDelay({ vehicles: applyFilters(filters), fleetSize: mockVehicles.length });
   },
 
   async show(id) {
@@ -43,9 +43,8 @@ export const mockVehicleApi: VehicleApi = {
     currentMockUser();
     const available = mockVehicles.filter((car) => car.availableUnits > 0);
     return mockDelay({
+      featured: available.filter((car) => car.isPopular).slice(0, 4),
       recommended: [...available].sort(sorters.recommended).slice(0, 4),
-      popular: [...available].sort(sorters.rating).slice(0, 4),
-      newArrivals: [...available].reverse().slice(0, 4),
     });
   },
 };

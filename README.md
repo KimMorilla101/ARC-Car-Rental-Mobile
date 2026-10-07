@@ -57,6 +57,15 @@ src/
   constants/     theme tokens, API config, endpoint map
 ```
 
+### Styling
+
+- Every component or screen keeps its styles in a sibling file: `VehicleCard.tsx` → `VehicleCard.styles.ts`.
+  Component files contain no `StyleSheet` code and no inline style objects. (React Native can't load `.css` files
+  on iOS/Android, so styles are `StyleSheet` objects in TypeScript.)
+- Colours, fonts, radii, shadows and gradients come from `src/constants/theme.ts`, taken from the Figma design.
+  Fonts are DM Serif Display (headings) and Outfit (everything else). Use the `font.*` families instead of `fontWeight`.
+- Never add style files inside `src/app/`: Expo Router treats every file there as a screen.
+
 ### Connecting a real endpoint
 
 1. Set its path in `src/constants/endpoints.ts`. Every entry is `null` until the backend confirms it, and a `null`

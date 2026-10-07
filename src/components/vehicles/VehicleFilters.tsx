@@ -1,39 +1,47 @@
+import Slider from '@react-native-community/slider';
 import { useState, type ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/common/Button';
+import { Checkbox } from '@/components/common/Checkbox';
 import { ChoiceChip } from '@/components/common/ChoiceChip';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
-import { gutter, palette } from '@/constants/theme';
+import { Icon } from '@/components/common/Icon';
+import { palette, text } from '@/constants/theme';
 import type { FuelType, Transmission, VehicleCategory, VehicleFilters as Filters, VehicleSort } from '@/types/vehicle';
+import { formatPeso } from '@/utils/formatters';
 
-const categories: VehicleCategory[] = ['Sedan', 'SUV', 'MPV', 'Hatchback', 'Pickup'];
+import { categoryLabel } from './VehicleCard';
+import { styles } from './VehicleFilters.styles';
+
+const categories: VehicleCategory[] = ['Sedan', 'SUV', 'MPV', 'Pickup', 'Luxury', 'Hatchback'];
 const transmissions: Transmission[] = ['Automatic', 'Manual'];
 const fuels: FuelType[] = ['Gasoline', 'Diesel', 'Hybrid', 'Electric'];
-const seatOptions = [4, 5, 7];
-const priceOptions = [2000, 2500, 3000];
+const seatOptions = [2, 4, 5, 7, 12];
+const PRICE_MIN = 1000;
+const PRICE_MAX = 8000;
 
-export const sortLabels: Record<VehicleSort, string> = {
-  recommended: 'Recommended',
-  price_asc: 'Price: low to high',
-  price_desc: 'Price: high to low',
-  rating: 'Top rated',
-  seats: 'Most seats',
-};
+export const sortOptions: { value: VehicleSort; label: string }[] = [
+  { value: 'recommended', label: 'Recommended' },
+  { value: 'price_asc', label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'popular', label: 'Most Popular' },
+  { value: 'rating', label: 'Highest Rated' },
+];
 
 /** Horizontal category chips shown above the vehicle list. */
 export function CategoryChips({ value, onChange }: { value: VehicleCategory | undefined; onChange: (category: VehicleCategory | undefined) => void }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-      <ChoiceChip label="All cars" active={!value} onPress={() => onChange(undefined)} />
+      <ChoiceChip label="All" active={!value} onPress={() => onChange(undefined)} />
       {categories.map((item) => (
-        <ChoiceChip key={item} label={item} active={value === item} onPress={() => onChange(item)} />
+        <ChoiceChip key={item} label={categoryLabel(item)} active={value === item} onPress={() => onChange(item)} />
       ))}
     </ScrollView>
   );
 }
 
-/** Number of advanced filters in use, for the filter button badge. */
+/** Number of sheet filters in use, for the Filters button badge. */
 export function countAdvancedFilters(filters: Filters): number {
   return [filters.transmission, filters.fuel, filters.minSeats, filters.maxDailyRate, filters.availableOnly].filter(Boolean).length;
 }
@@ -45,56 +53,66 @@ interface FilterSheetProps {
   onClose: () => void;
 }
 
-/** Bottom sheet for transmission, fuel, seating, price, availability and sort. */
+/** Bottom sheet with availability, category, transmission, fuel, passengers and max price. */
 export function VehicleFilterSheet({ visible, filters, onApply, onClose }: FilterSheetProps) {
   const [draft, setDraft] = useState<Filters>(filters);
-  const toggle = <K extends keyof Filters>(key: K, value: Filters[K]) => setDraft((current) => ({ ...current, [key]: current[key] === value ? undefined : value }));
+  const set = <K extends keyof Filters>(key: K, value: Filters[K]) => setDraft((current) => ({ ...current, [key]: value }));
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} onShow={() => setDraft(filters)}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close filters" />
       <SafeAreaView edges={['bottom']} style={styles.sheet}>
         <View style={styles.header}>
-          <Text style={styles.title}>Filter & sort</Text>
-          <Pressable
-            hitSlop={10}
-            onPress={() => setDraft({ search: filters.search, category: filters.category, pickupAt: filters.pickupAt, returnAt: filters.returnAt })}>
-            <Text style={styles.reset}>Reset</Text>
+          <Text style={styles.title}>Filters</Text>
+          <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close filters">
+            <Icon name="x" size={22} color={palette.navy} />
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.body}>
-          <Group title="Sort by">
-            {(Object.keys(sortLabels) as VehicleSort[]).map((sort) => (
-              <ChoiceChip key={sort} label={sortLabels[sort]} active={(draft.sort ?? 'recommended') === sort} onPress={() => setDraft({ ...draft, sort })} />
-            ))}
+          <Group title="Availability">
+            <Checkbox label="Available only" checked={!!draft.availableOnly} onChange={(checked) => set('availableOnly', checked || undefined)} />
+          </Group>
+          <Group title="Category">
+            <RadioList value={draft.category} options={categories.map((item) => ({ value: item, label: categoryLabel(item) }))} onChange={(value) => set('category', value)} />
           </Group>
           <Group title="Transmission">
-            {transmissions.map((item) => (
-              <ChoiceChip key={item} label={item} active={draft.transmission === item} onPress={() => toggle('transmission', item)} />
-            ))}
+            <RadioList value={draft.transmission} options={transmissions.map((item) => ({ value: item, label: item }))} onChange={(value) => set('transmission', value)} />
           </Group>
-          <Group title="Fuel">
-            {fuels.map((item) => (
-              <ChoiceChip key={item} label={item} active={draft.fuel === item} onPress={() => toggle('fuel', item)} />
-            ))}
+          <Group title="Fuel type">
+            <RadioList value={draft.fuel} options={fuels.map((item) => ({ value: item, label: item }))} onChange={(value) => set('fuel', value)} />
           </Group>
-          <Group title="Seats">
-            {seatOptions.map((seats) => (
-              <ChoiceChip key={seats} label={`${seats}+ seats`} active={draft.minSeats === seats} onPress={() => toggle('minSeats', seats)} />
-            ))}
+          <Group title="Min. passengers">
+            <View style={styles.wrap}>
+              <ChoiceChip label="Any" active={!draft.minSeats} onPress={() => set('minSeats', undefined)} />
+              {seatOptions.map((seats) => (
+                <ChoiceChip key={seats} label={`${seats}+`} active={draft.minSeats === seats} onPress={() => set('minSeats', seats)} />
+              ))}
+            </View>
           </Group>
-          <Group title="Daily price">
-            {priceOptions.map((price) => (
-              <ChoiceChip key={price} label={`Up to ₱${price.toLocaleString()}`} active={draft.maxDailyRate === price} onPress={() => toggle('maxDailyRate', price)} />
-            ))}
-          </Group>
-          <Group title="Availability">
-            <ChoiceChip label="Available units only" active={!!draft.availableOnly} onPress={() => toggle('availableOnly', true)} />
+          <Group title="Max price/day" right={<Text style={styles.priceValue}>{formatPeso(draft.maxDailyRate ?? PRICE_MAX)}</Text>}>
+            <Slider
+              minimumValue={PRICE_MIN}
+              maximumValue={PRICE_MAX}
+              step={500}
+              value={draft.maxDailyRate ?? PRICE_MAX}
+              onValueChange={(value) => set('maxDailyRate', value >= PRICE_MAX ? undefined : value)}
+              minimumTrackTintColor={palette.blue}
+              maximumTrackTintColor={palette.line}
+              thumbTintColor={palette.blue}
+              accessibilityLabel="Maximum price per day"
+            />
           </Group>
         </ScrollView>
         <View style={styles.footer}>
-          <PrimaryButton
-            label="Show vehicles"
+          <Button
+            label="Reset"
+            variant="outline"
+            style={styles.footerButton}
+            onPress={() => setDraft({ search: filters.search, sort: filters.sort, pickupAt: filters.pickupAt, returnAt: filters.returnAt })}
+          />
+          <Button
+            label="Apply Filters"
+            style={styles.footerButton}
             onPress={() => {
               onApply(draft);
               onClose();
@@ -106,25 +124,36 @@ export function VehicleFilterSheet({ visible, filters, onApply, onClose }: Filte
   );
 }
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
+function RadioList<T extends string>({ value, options, onChange }: { value: T | undefined; options: { value: T; label: string }[]; onChange: (value: T | undefined) => void }) {
+  const all = [{ value: undefined, label: 'All' }, ...options];
   return (
-    <View style={styles.group}>
-      <Text style={styles.groupTitle}>{title.toUpperCase()}</Text>
-      <View style={styles.groupItems}>{children}</View>
+    <View accessibilityRole="radiogroup">
+      {all.map((option) => {
+        const selected = option.value === value;
+        return (
+          <Pressable
+            key={option.label}
+            onPress={() => onChange(option.value)}
+            style={styles.radioRow}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selected }}>
+            <View style={[styles.radio, selected && styles.radioSelected]}>{selected && <View style={styles.radioDot} />}</View>
+            <Text style={styles.radioLabel}>{option.label}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  chips: { gap: 8, paddingVertical: 18 },
-  backdrop: { flex: 1, backgroundColor: 'rgba(4, 13, 24, 0.45)' },
-  sheet: { backgroundColor: palette.canvas, borderTopLeftRadius: 22, borderTopRightRadius: 22, maxHeight: '85%' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: gutter, paddingTop: 20 },
-  title: { color: palette.navy, fontSize: 20, fontWeight: '900' },
-  reset: { color: palette.blue, fontSize: 13, fontWeight: '800' },
-  body: { paddingHorizontal: gutter, paddingBottom: 10 },
-  group: { marginTop: 18 },
-  groupTitle: { color: palette.label, fontSize: 10, fontWeight: '800', letterSpacing: 1.1, marginBottom: 9 },
-  groupItems: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  footer: { paddingHorizontal: gutter, paddingBottom: 10 },
-});
+function Group({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
+  return (
+    <View style={styles.group}>
+      <View style={styles.groupHeader}>
+        <Text style={text.label}>{title.toUpperCase()}</Text>
+        {right}
+      </View>
+      {children}
+    </View>
+  );
+}

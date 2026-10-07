@@ -1,47 +1,55 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorState } from '@/components/common/ErrorMessage';
+import { Icon } from '@/components/common/Icon';
 import { VehicleListSkeleton } from '@/components/common/LoadingSkeleton';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
 import { SearchField } from '@/components/common/SearchField';
-import { TopBar } from '@/components/common/TopBar';
+import { Select } from '@/components/common/Select';
 import { VehicleCard } from '@/components/vehicles/VehicleCard';
-import { CategoryChips, countAdvancedFilters, sortLabels, VehicleFilterSheet } from '@/components/vehicles/VehicleFilters';
+import { CategoryChips, countAdvancedFilters, sortOptions, VehicleFilterSheet } from '@/components/vehicles/VehicleFilters';
 import { palette } from '@/constants/theme';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useVehicles } from '@/hooks/useVehicles';
 import type { VehicleFilters, VehicleSort } from '@/types/vehicle';
 import { formatDate } from '@/utils/formatters';
 
-type Params = { search?: string; pickupAt?: string; returnAt?: string; sort?: VehicleSort };
+import { styles } from './VehiclesScreen.styles';
+
+type Params = { search?: string; pickupAt?: string; returnAt?: string; sort?: VehicleSort; minSeats?: string };
+
+const filtersFromParams = (params: Params): VehicleFilters => ({
+  pickupAt: params.pickupAt,
+  returnAt: params.returnAt,
+  sort: params.sort ?? 'recommended',
+  minSeats: params.minSeats ? Number(params.minSeats) : undefined,
+  availableOnly: params.pickupAt ? true : undefined,
+});
 
 export default function VehiclesScreen() {
   const params = useLocalSearchParams<Params>();
   const [search, setSearch] = useState(params.search ?? '');
-  const [filters, setFilters] = useState<VehicleFilters>({
-    pickupAt: params.pickupAt,
-    returnAt: params.returnAt,
-    sort: params.sort ?? 'recommended',
-    availableOnly: params.pickupAt ? true : undefined,
-  });
+  const [filters, setFilters] = useState<VehicleFilters>(() => filtersFromParams(params));
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // The tab stays mounted, so apply new params when Home opens Browse with a fresh search.
   const [appliedParams, setAppliedParams] = useState(params);
-  if (params.search !== appliedParams.search || params.pickupAt !== appliedParams.pickupAt || params.returnAt !== appliedParams.returnAt || params.sort !== appliedParams.sort) {
+  const paramsKey = (value: Params) => [value.search, value.pickupAt, value.returnAt, value.sort, value.minSeats].join('|');
+  if (paramsKey(params) !== paramsKey(appliedParams)) {
     setAppliedParams(params);
     setSearch(params.search ?? '');
-    setFilters({ pickupAt: params.pickupAt, returnAt: params.returnAt, sort: params.sort ?? 'recommended', availableOnly: params.pickupAt ? true : undefined });
+    setFilters(filtersFromParams(params));
   }
 
   const debouncedSearch = useDebouncedValue(search.trim());
   const vehicles = useVehicles({ ...filters, search: debouncedSearch || undefined });
   const activeFilters = countAdvancedFilters(filters);
+  const result = vehicles.data;
 
-  const clearDates = () => setFilters((current) => ({ ...current, pickupAt: undefined, returnAt: undefined }));
   const resetAll = () => {
     setSearch('');
     setFilters({ sort: 'recommended' });
@@ -49,48 +57,54 @@ export default function VehiclesScreen() {
 
   const header = (
     <View>
-      <Text style={screenStyles.title}>Find your next ride</Text>
-      <Text style={screenStyles.subtitle}>Choose from our collection of clean, reliable vehicles.</Text>
-      <View style={styles.search}>
-        <SearchField value={search} onChangeText={setSearch} placeholder="Search by car name or type" />
+      <PageHeader title="Browse Cars" subtitle={result ? `Explore our fleet of ${result.fleetSize} premium vehicles` : 'Explore our premium fleet'} />
+      <View style={styles.searchRow}>
+        <View style={styles.searchField}>
+          <SearchField value={search} onChangeText={setSearch} placeholder="Search by name or type" />
+        </View>
+        <View style={styles.sortField}>
+          <Select accessibilityLabel="Sort by" value={filters.sort ?? 'recommended'} options={sortOptions} onChange={(sort) => setFilters((current) => ({ ...current, sort }))} />
+        </View>
       </View>
+      <Pressable onPress={() => setSheetOpen(true)} style={styles.filterButton} accessibilityRole="button" accessibilityLabel={`Filters, ${activeFilters} active`}>
+        <Icon name="sliders" size={16} color={palette.ink} />
+        <Text style={styles.filterText}>Filters</Text>
+        {activeFilters > 0 && (
+          <View style={styles.filterBadge}>
+            <Text style={styles.filterBadgeText}>{activeFilters}</Text>
+          </View>
+        )}
+      </Pressable>
       {filters.pickupAt && filters.returnAt && (
         <View style={styles.dateBanner}>
+          <Icon name="calendar" size={15} color={palette.blueDark} />
           <Text style={styles.dateText}>
             Available {formatDate(filters.pickupAt)} – {formatDate(filters.returnAt)}
           </Text>
-          <Pressable onPress={clearDates} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear dates">
-            <Text style={styles.clear}>Clear</Text>
+          <Pressable onPress={() => setFilters((current) => ({ ...current, pickupAt: undefined, returnAt: undefined }))} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear dates">
+            <Icon name="x" size={16} color={palette.blueDark} />
           </Pressable>
         </View>
       )}
-      <CategoryChips value={filters.category} onChange={(category) => setFilters((current) => ({ ...current, category }))} />
-      <View style={styles.resultRow}>
-        <Text style={styles.resultCount}>{vehicles.data ? `${vehicles.data.length} vehicle${vehicles.data.length === 1 ? '' : 's'}` : 'Searching…'}</Text>
-        <Pressable onPress={() => setSheetOpen(true)} hitSlop={8} accessibilityRole="button">
-          <Text style={styles.sort}>{sortLabels[filters.sort ?? 'recommended']} ˅</Text>
-        </Pressable>
+      <View style={styles.chips}>
+        <CategoryChips value={filters.category} onChange={(category) => setFilters((current) => ({ ...current, category }))} />
       </View>
+      <Text style={styles.resultCount}>
+        {result ? (
+          <>
+            Showing <Text style={styles.resultStrong}>{result.vehicles.length}</Text> of <Text style={styles.resultStrong}>{result.fleetSize}</Text> vehicles
+          </>
+        ) : (
+          'Searching…'
+        )}
+      </Text>
     </View>
   );
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <TopBar
-        title="Browse cars"
-        action={
-          <Pressable onPress={() => setSheetOpen(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel={`Filters, ${activeFilters} active`}>
-            <Text style={styles.filterIcon}>≡</Text>
-            {activeFilters > 0 && (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{activeFilters}</Text>
-              </View>
-            )}
-          </Pressable>
-        }
-      />
       <FlatList
-        data={vehicles.error ? [] : (vehicles.data ?? [])}
+        data={vehicles.error ? [] : (result?.vehicles ?? [])}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => <VehicleCard vehicle={item} />}
         ListHeaderComponent={header}
@@ -100,7 +114,7 @@ export default function VehiclesScreen() {
           ) : vehicles.error ? (
             <ErrorState error={vehicles.error} onRetry={vehicles.refetch} />
           ) : (
-            <EmptyState title="No cars found" message="Try another search, category, or date range." actionLabel="Clear filters" onAction={resetAll} />
+            <EmptyState icon="search" title="No cars found" message="Try another search, category, or filter." actionLabel="Clear filters" onAction={resetAll} />
           )
         }
         contentContainerStyle={screenStyles.tabScroll}
@@ -113,16 +127,3 @@ export default function VehiclesScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  filterIcon: { color: palette.navy, fontSize: 26 },
-  filterBadge: { position: 'absolute', top: -2, right: -8, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: palette.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
-  filterBadgeText: { color: palette.white, fontSize: 9, fontWeight: '900' },
-  search: { marginTop: 20 },
-  dateBanner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: palette.blueSoft, borderRadius: 12, padding: 12, marginTop: 12 },
-  dateText: { color: palette.blue, fontSize: 12, fontWeight: '800', flexShrink: 1 },
-  clear: { color: palette.blue, fontSize: 12, fontWeight: '800', textDecorationLine: 'underline' },
-  resultRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 13 },
-  resultCount: { color: palette.navy, fontSize: 13, fontWeight: '800' },
-  sort: { color: palette.blue, fontSize: 11, fontWeight: '800' },
-});

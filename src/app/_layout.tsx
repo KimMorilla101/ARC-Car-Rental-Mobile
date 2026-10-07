@@ -1,23 +1,22 @@
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
+import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold, Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
+import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
 
 import { CrashFallback, ErrorBoundary as AppErrorBoundary } from '@/components/common/ErrorBoundary';
-import { ErrorState } from '@/components/common/ErrorMessage';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { PrimaryButton } from '@/components/common/PrimaryButton';
-import { Screen } from '@/components/common/Screen';
+import { SessionRestoreOverlay } from '@/components/common/SessionRestoreOverlay';
 import { palette } from '@/constants/theme';
 import { AuthProvider } from '@/context/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
-import { ApiError } from '@/services/api';
 
-// Keep the native splash screen up until the saved session has been checked.
+// Keep the native splash screen up until the fonts are loaded and the saved session has been checked.
 SplashScreen.preventAutoHideAsync();
 
 const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: palette.canvas } };
+const screenOptions = { headerShown: false, contentStyle: { backgroundColor: palette.canvas } };
 
 /** Expo Router calls this for render errors inside any route. */
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
@@ -45,16 +44,30 @@ export default function RootLayout() {
  */
 function RootNavigator() {
   const { status, retryRestore, signOut } = useAuth();
+  // Figma fonts: DM Serif Display for headings, Outfit for everything else.
+  const [fontsLoaded, fontError] = useFonts({
+    DMSerifDisplay_400Regular,
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_600SemiBold,
+    Outfit_700Bold,
+    Outfit_800ExtraBold,
+  });
+  // If the fonts fail to load, carry on with system fonts rather than block the app.
+  const fontsReady = fontsLoaded || !!fontError;
 
   useEffect(() => {
-    if (status !== 'restoring') SplashScreen.hideAsync();
-  }, [status]);
+    if (status !== 'restoring' && fontsReady) SplashScreen.hideAsync();
+  }, [status, fontsReady]);
+
+  // Rendering text before the fonts exist would flash system fonts; the splash screen covers this.
+  if (!fontsReady) return null;
 
   const signedIn = status === 'signedIn';
   // The navigator stays mounted so deep links resolve; restore states are drawn on top of it.
   return (
     <>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.canvas } }}>
+      <Stack screenOptions={screenOptions}>
         <Stack.Protected guard={signedIn}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
@@ -65,26 +78,7 @@ function RootNavigator() {
         <Stack.Screen name="contact" />
         <Stack.Screen name="faq" />
       </Stack>
-      {status === 'restoring' && (
-        <View style={styles.overlay}>
-          <LoadingSpinner fullScreen />
-        </View>
-      )}
-      {status === 'restoreFailed' && (
-        <Screen style={[styles.overlay, styles.centered]}>
-          <ErrorState
-            title="Can't reach ARC Ride"
-            error={new ApiError('network', 'We could not check your session. Check your connection and try again.')}
-            onRetry={retryRestore}
-          />
-          <PrimaryButton label="Sign out" variant="ghost" onPress={signOut} />
-        </Screen>
-      )}
+      <SessionRestoreOverlay status={status} onRetry={retryRestore} onSignOut={signOut} />
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-  centered: { justifyContent: 'center', padding: 20 },
-});

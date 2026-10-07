@@ -1,7 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 
-import { gutter, palette } from '@/constants/theme';
+import { palette } from '@/constants/theme';
+
+import { styles } from './LoadingSkeleton.styles';
 
 interface SkeletonProps {
   width?: DimensionValue;
@@ -39,7 +41,7 @@ function SkeletonGroup({ children, label }: { children: ReactNode; label: string
 export function VehicleCardSkeleton({ compact = false }: { compact?: boolean }) {
   return (
     <View style={[styles.card, compact && styles.compactCard]}>
-      <Skeleton height={compact ? 135 : 170} radius={0} />
+      <Skeleton height={compact ? 135 : 180} radius={0} />
       <View style={styles.cardBody}>
         <Skeleton width="60%" height={18} />
         <Skeleton width="40%" height={12} style={styles.gap} />
@@ -113,13 +115,3 @@ export function NotificationListSkeleton() {
     </SkeletonGroup>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { backgroundColor: palette.white, borderRadius: 18, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: palette.border },
-  compactCard: { width: 260, marginRight: 14 },
-  cardBody: { padding: 15 },
-  padded: { padding: gutter },
-  gap: { marginTop: 8 },
-  gapLarge: { marginTop: 16 },
-  section: { marginTop: 28, marginBottom: 12 },
-});

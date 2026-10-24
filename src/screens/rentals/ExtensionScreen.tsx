@@ -55,6 +55,18 @@ export default function ExtensionScreen() {
   }
 
   if (data.deadlinePassed) return <ReturnModeNotice bookingId={id} />;
+  // Options and fees are set by ARC on the server; never invent one.
+  if (data.options.length === 0) {
+    return (
+      <Screen>
+        <ScrollView contentContainerStyle={screenStyles.stackScroll}>
+          <BackLink />
+          <PageHeader title="Request Extension" />
+          <NoticeBox title="Extensions not available">ARC has not set any extension options for this rental. Please contact ARC if you need more time.</NoticeBox>
+        </ScrollView>
+      </Screen>
+    );
+  }
 
   const choice = data.options.find((item) => item.type === selected) ?? data.options[0];
   const count = Math.min(quantity, choice.maxQuantity);

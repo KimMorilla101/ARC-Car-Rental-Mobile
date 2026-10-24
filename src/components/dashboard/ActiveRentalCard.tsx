@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { Icon } from '@/components/common/Icon';
+import { VehiclePhoto } from '@/components/vehicles/VehiclePhoto';
 import { palette, gradients } from '@/constants/theme';
 import type { Booking } from '@/types/booking';
 import { formatFullDate, formatTime } from '@/utils/formatters';
@@ -17,7 +17,7 @@ export function ActiveRentalCard({ booking }: { booking: Booking }) {
   return (
     <LinearGradient colors={overdue ? ['#EF4444', '#B91C1C'] : gradients.green} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
       <View style={styles.row}>
-        <Image source={{ uri: booking.vehicle.imageUrl }} style={styles.image} contentFit="cover" />
+        <VehiclePhoto uri={booking.vehicle.imageUrl} style={styles.image} />
         <View style={styles.copy}>
           <View style={styles.statusRow}>
             <View style={styles.dot} />

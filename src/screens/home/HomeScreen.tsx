@@ -13,6 +13,7 @@ import { HomeHero } from '@/components/dashboard/HomeHero';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { SearchCard } from '@/components/dashboard/SearchCard';
 import { WhyArcSection } from '@/components/dashboard/WhyArcSection';
+import { NoCarsYet } from '@/components/vehicles/NoCarsYet';
 import { VehicleCard } from '@/components/vehicles/VehicleCard';
 import { palette } from '@/constants/theme';
 import { useRefetchOnFocus } from '@/hooks/useApiQuery';
@@ -43,6 +44,9 @@ export default function HomeScreen() {
   const upcoming = list.filter((item) => UPCOMING.includes(item.status)).sort((a, b) => a.pickupAt.localeCompare(b.pickupAt)).slice(0, 2);
   const recent = list.filter((item) => FINISHED.includes(item.status)).slice(0, 2);
   const firstName = user.name.split(' ')[0];
+  // Featured = popular cars. If the admin has not marked any car as popular, show the recommended cars
+  // instead, so "No cars available yet" only appears when there really are none.
+  const homeCars = feed.data ? (feed.data.featured.length ? feed.data.featured : feed.data.recommended) : [];
 
   const refreshAll = () => {
     feed.refresh();
@@ -91,8 +95,10 @@ export default function HomeScreen() {
             <VehicleCardSkeleton />
           ) : feed.error ? (
             <ErrorState error={feed.error} onRetry={feed.refetch} title="Could not load cars" />
+          ) : homeCars.length === 0 ? (
+            <NoCarsYet />
           ) : (
-            feed.data?.featured.map((vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} variant="featured" />)
+            homeCars.map((vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} variant="featured" />)
           )}
 
           <QuickActions bookingCount={bookings.data ? bookings.data.length : null} />

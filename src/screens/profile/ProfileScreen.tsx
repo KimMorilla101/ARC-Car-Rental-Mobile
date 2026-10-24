@@ -75,7 +75,7 @@ export default function ProfileScreen() {
         ) : (
           <Button label="Log Out" icon="log-out" variant="danger" onPress={() => setConfirmingLogout(true)} style={styles.logout} />
         )}
-        {apiConfig.useMockApi && <Text style={styles.demo}>Demo data mode: changes are not saved to a server.</Text>}
+        {apiConfig.useMockApi && <Text style={styles.demo}>Development mock mode: changes are kept in memory only, not saved to a server.</Text>}
       </ScrollView>
     </Screen>
   );

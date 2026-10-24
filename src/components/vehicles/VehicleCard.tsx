@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
@@ -10,6 +9,7 @@ import type { Vehicle } from '@/types/vehicle';
 import { formatPeso } from '@/utils/formatters';
 
 import { styles } from './VehicleCard.styles';
+import { VehiclePhoto } from './VehiclePhoto';
 
 export const categoryLabel = (category: Vehicle['category']) => (category === 'MPV' ? 'Van/MPV' : category);
 
@@ -28,7 +28,7 @@ export function VehicleCard({ vehicle, variant = 'list' }: { vehicle: Vehicle; v
   return (
     <View style={styles.card}>
       <Pressable onPress={openDetails} accessibilityRole="imagebutton" accessibilityLabel={`${vehicle.name} details`}>
-        <Image source={{ uri: vehicle.imageUrl }} style={styles.image} contentFit="cover" transition={200} />
+        <VehiclePhoto uri={vehicle.imageUrl} style={styles.image} label />
         <View style={styles.badgeLeft}>
           {available ? <Pill tone="solidGreen">● Available</Pill> : <Pill tone="red">Fully booked</Pill>}
         </View>

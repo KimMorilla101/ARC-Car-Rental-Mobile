@@ -5,5 +5,6 @@ import { palette, font } from '@/constants/theme';
 export const styles = StyleSheet.create({
   submit: { marginTop: 24 },
   terms: { color: palette.muted, fontSize: 12, lineHeight: 18, fontFamily: font.regular, textAlign: 'center', marginTop: 18 },
-  termsLink: { color: palette.blue, fontFamily: font.semibold },
+  // Plain bold text, not a link: the Terms and Privacy pages do not exist yet.
+  termsStrong: { color: palette.ink, fontFamily: font.bold },
 });

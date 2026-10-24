@@ -4,8 +4,7 @@ import { palette, font, radius, shadow } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   card: { backgroundColor: palette.white, borderRadius: radius.lg, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: palette.border, ...shadow.card },
-  image: { width: '100%', height: 180, backgroundColor: palette.skeleton },
-  badgeLeft: { position: 'absolute', top: 12, left: 12 },
+  image: { width: '100%', height: 180, backgroundColor: palette.skeleton },  badgeLeft: { position: 'absolute', top: 12, left: 12 },
   badgeRight: { position: 'absolute', top: 12, right: 12 },
   priceTag: { position: 'absolute', right: 12, bottom: 12, backgroundColor: 'rgba(15,23,42,0.75)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
   priceTagValue: { color: palette.white, fontSize: 15, fontFamily: font.extrabold },

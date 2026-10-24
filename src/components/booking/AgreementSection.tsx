@@ -23,6 +23,13 @@ interface AgreementSectionProps {
 export function AgreementSection({ agreement, accepted, onAcceptedChange, error }: AgreementSectionProps) {
   const [reachedEnd, setReachedEnd] = useState(false);
   const viewportHeight = useRef(0);
+  const contentHeight = useRef(0);
+
+  // An agreement short enough to fit without scrolling counts as read. Layout and content size can
+  // arrive in either order, so check after each one.
+  const checkFits = () => {
+    if (viewportHeight.current > 0 && contentHeight.current > 0 && contentHeight.current <= viewportHeight.current + 1) setReachedEnd(true);
+  };
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
@@ -48,10 +55,11 @@ export function AgreementSection({ agreement, accepted, onAcceptedChange, error 
           scrollEventThrottle={16}
           onLayout={(event) => {
             viewportHeight.current = event.nativeEvent.layout.height;
+            checkFits();
           }}
           onContentSizeChange={(_width, height) => {
-            // An agreement short enough to fit without scrolling counts as read.
-            if (viewportHeight.current > 0 && height <= viewportHeight.current) setReachedEnd(true);
+            contentHeight.current = height;
+            checkFits();
           }}>
           <Text style={styles.docTitle}>{agreement.title}</Text>
           <Text style={styles.docIntro}>Effective upon booking confirmation. Read carefully before accepting.</Text>

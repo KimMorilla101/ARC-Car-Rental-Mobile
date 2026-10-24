@@ -25,6 +25,10 @@ included in Expo Go. Use a development build if you add other native modules.
 | `EXPO_PUBLIC_API_PORT` | Port used for auto-detection (default `8000`). |
 | `EXPO_PUBLIC_USE_MOCK_API` | `true` = temporary in-memory data in `src/services/mock/`. Ignored in release builds. Demo login: `juan@example.com` / `password123`. |
 
+> **Mock mode is for development only.** Mock sign-in is not real authentication. Mock mode has no sample fleet, only
+> one clearly labelled "TEST CAR (not real)" for testing Car Details and Booking. Without it, Browse Cars and Home show
+> "No cars available yet" until the Laravel API serves cars added through the admin website.
+
 `EXPO_PUBLIC_*` values are bundled into the app, so never put secrets in them. Base-URL examples for Laragon, the Android
 emulator (`10.0.2.2`), the iOS simulator and physical phones are in `.env.example`. For a phone to reach your
 PC, start Laravel with `php artisan serve --host=0.0.0.0 --port=8000`.
@@ -46,7 +50,8 @@ src/
     (auth)/        welcome, login, register, forgot-password: signed-out only
     (app)/         signed-in only: (tabs) + vehicle, booking, profile screens
     about|contact|faq.tsx   public pages
-  screens/       one component per screen, grouped by feature
+  screens/       one component per screen, grouped by feature folder (auth/, booking/, home/, info/,
+                 notifications/, profile/, rentals/, vehicles/), each Name.tsx beside its Name.styles.ts
   components/    reusable UI (common/, auth/, dashboard/, vehicles/, booking/, payment/, profile/)
   services/      api.ts (HTTP client, token, 401 handling) + one *Api.ts per feature
     mock/          TEMPORARY mock implementations, only used when EXPO_PUBLIC_USE_MOCK_API=true

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { palette } from '@/constants/theme';
@@ -11,10 +11,12 @@ interface FormFieldProps extends Omit<TextInputProps, 'style'> {
   icon?: IconName;
   error?: string | null;
   helper?: string;
+  /** Lets a form move focus here, e.g. from the keyboard's "Next" key on the previous field. */
+  ref?: Ref<TextInput>;
 }
 
 /** Labelled input with a leading icon, inline validation message and a show/hide toggle for passwords. */
-export function FormField({ label, icon, error, helper, multiline, secureTextEntry, editable, ...inputProps }: FormFieldProps) {
+export function FormField({ label, icon, error, helper, multiline, secureTextEntry, editable, ref, ...inputProps }: FormFieldProps) {
   const [hidden, setHidden] = useState(true);
   const readOnly = editable === false;
   return (
@@ -28,6 +30,7 @@ export function FormField({ label, icon, error, helper, multiline, secureTextEnt
         )}
         <TextInput
           {...inputProps}
+          ref={ref}
           editable={editable}
           multiline={multiline}
           secureTextEntry={secureTextEntry && hidden}

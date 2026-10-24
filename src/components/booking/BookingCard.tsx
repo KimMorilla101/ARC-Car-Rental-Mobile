@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { Icon } from '@/components/common/Icon';
 import { Pill } from '@/components/common/Pill';
+import { VehiclePhoto } from '@/components/vehicles/VehiclePhoto';
 import { palette } from '@/constants/theme';
 import type { Booking } from '@/types/booking';
 import { bookingStatusLabel, formatFullDate, formatPeso, plural } from '@/utils/formatters';
@@ -22,7 +22,7 @@ export function BookingCard({ booking }: { booking: Booking }) {
       accessibilityRole="button"
       accessibilityLabel={`${booking.vehicle.name}, ${bookingStatusLabel[booking.status]}`}>
       <View style={styles.row}>
-        <Image source={{ uri: booking.vehicle.imageUrl }} style={styles.image} contentFit="cover" />
+        <VehiclePhoto uri={booking.vehicle.imageUrl} style={styles.image} />
         <View style={styles.copy}>
           <View style={styles.top}>
             <Text style={styles.reference}>{booking.reference}</Text>

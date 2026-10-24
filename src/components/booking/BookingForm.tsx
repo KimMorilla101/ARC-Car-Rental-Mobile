@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/common/Button';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
@@ -105,7 +105,9 @@ export function BookingForm({ vehicle, agreement, paymentMethods, locations }: B
       if (!draft.destination.trim()) found.destination = 'Travel destination is required.';
       if (quote.data && !quote.data.available) found.vehicleId = 'No unit of this car is free for those dates. Try different dates.';
     }
-    if (index === 1 && requirements.some((item) => !draft.documents[item.type])) found.documents = 'Upload every required document to continue.';
+    // The document list comes from the server quote: never let an empty (not yet loaded) list pass.
+    if (index === 1 && !quote.data) found.documents = 'The list of required documents has not loaded yet. Check your connection and try again.';
+    else if (index === 1 && requirements.some((item) => !draft.documents[item.type])) found.documents = 'Upload every required document to continue.';
     if (index === 2) {
       if (!draft.paymentMethod) found.paymentMethod = 'Choose a payment method.';
       if (selectedPayment?.requiresProof && !draft.paymentProof) found.paymentProof = 'Upload your proof of payment.';
@@ -173,6 +175,20 @@ export function BookingForm({ vehicle, agreement, paymentMethods, locations }: B
     }
   };
 
+  // Android back button: go to the previous step instead of leaving (and losing) the whole form, and
+  // never leave while the booking is being submitted.
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (progress) return true;
+      if (step > 0) {
+        goTo(step - 1);
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  });
+
   const stepProps = { draft, update, errors };
   const last = step === BOOKING_STEPS.length - 1;
 
@@ -185,7 +201,7 @@ export function BookingForm({ vehicle, agreement, paymentMethods, locations }: B
 
         <View style={styles.body}>
           {step === 0 && <DatesStep {...stepProps} locations={locations} />}
-          {step === 1 && <DocumentsStep {...stepProps} requirements={requirements} onPick={pick} />}
+          {step === 1 && <DocumentsStep {...stepProps} requirements={requirements} listStatus={quote.data ? 'ready' : quote.error ? 'error' : 'loading'} onRetry={quote.refetch} onPick={pick} />}
           {step === 2 && <PaymentStep {...stepProps} paymentMethods={paymentMethods} onPick={pick} />}
           {step === 3 && <AgreementStep {...stepProps} agreement={agreement} vehicle={vehicle} quote={quote} />}
         </View>

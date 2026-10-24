@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
   ratingText: { color: palette.navy, fontSize: 14, fontFamily: font.bold },
   reviews: { color: palette.muted, fontSize: 13, fontFamily: font.regular },
   specGrid: { flexDirection: 'row', gap: 8, marginTop: 18 },
-  spec: { flex: 1, alignItems: 'center', gap: 4, backgroundColor: palette.white, borderRadius: radius.md, borderWidth: 1, borderColor: palette.border, paddingVertical: 12 },
+  spec: { flex: 1, alignItems: 'center', gap: 4, backgroundColor: palette.white, borderRadius: radius.md, borderWidth: 1, borderColor: palette.border, paddingVertical: 12, paddingHorizontal: 4 },
   specValue: { color: palette.navy, fontSize: 13, fontFamily: font.bold },
   specLabel: { color: palette.muted, fontSize: 11, fontFamily: font.regular },
   section: { marginTop: 18 },

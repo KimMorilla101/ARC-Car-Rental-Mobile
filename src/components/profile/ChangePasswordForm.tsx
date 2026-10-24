@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View } from 'react-native';
+import { useRef, useState } from 'react';
+import { TextInput, View } from 'react-native';
 
 import { Button } from '@/components/common/Button';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
@@ -7,6 +7,7 @@ import { FormField } from '@/components/common/FormField';
 import { useSubmit } from '@/hooks/useSubmit';
 import { profileApi } from '@/services/profileApi';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
+import { focusNextField } from '@/utils/focusNextField';
 import { hasErrors, MIN_PASSWORD_LENGTH, rules, validate } from '@/utils/validation';
 
 import { styles } from './ChangePasswordForm.styles';
@@ -19,6 +20,8 @@ export function ChangePasswordForm({ onChanged }: { onChanged: () => void }) {
   const [values, setValues] = useState(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const { submit, isSubmitting, error, reset } = useSubmit(profileApi.changePassword);
+  const newRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
 
   const update = (field: Field) => (text: string) => {
     setValues((current) => ({ ...current, [field]: text }));
@@ -46,8 +49,21 @@ export function ChangePasswordForm({ onChanged }: { onChanged: () => void }) {
   return (
     <View>
       <ErrorMessage message={getFormError(error, FIELDS)} />
-      <FormField label="Current password" icon="lock" value={values.currentPassword} onChangeText={update('currentPassword')} error={fieldError('currentPassword')} secureTextEntry autoComplete="current-password" textContentType="password" />
       <FormField
+        label="Current password"
+        icon="lock"
+        value={values.currentPassword}
+        onChangeText={update('currentPassword')}
+        error={fieldError('currentPassword')}
+        secureTextEntry
+        autoComplete="current-password"
+        textContentType="password"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => focusNextField(newRef)}
+      />
+      <FormField
+        ref={newRef}
         label="New password"
         icon="lock"
         placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
@@ -57,8 +73,12 @@ export function ChangePasswordForm({ onChanged }: { onChanged: () => void }) {
         secureTextEntry
         autoComplete="new-password"
         textContentType="newPassword"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => focusNextField(confirmRef)}
       />
       <FormField
+        ref={confirmRef}
         label="Confirm new password"
         icon="lock"
         value={values.passwordConfirmation}
@@ -67,6 +87,7 @@ export function ChangePasswordForm({ onChanged }: { onChanged: () => void }) {
         secureTextEntry
         autoComplete="new-password"
         textContentType="newPassword"
+        returnKeyType="go"
         onSubmitEditing={onSubmit}
       />
       <Button label="Update Password" icon="check" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />

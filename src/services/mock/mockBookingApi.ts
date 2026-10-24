@@ -89,7 +89,7 @@ export const mockBookingApi: BookingApi = {
     const user = currentMockUser();
     const { vehicle, branch, rentalDays, available, pricing } = quote(payload);
     if (!available) throw mockValidationError('vehicleId', 'No unit of this vehicle is available for those dates.');
-    const id = Math.max(...mockBookings.map((item) => Number(item.id))) + 1;
+    const id = Math.max(0, ...mockBookings.map((item) => Number(item.id))) + 1;
     const booking: StoredBooking = {
       id,
       userId: user.id,

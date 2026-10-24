@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 
@@ -11,6 +10,7 @@ import { DetailItem, InfoRow } from '@/components/common/InfoRow';
 import { DetailSkeleton } from '@/components/common/LoadingSkeleton';
 import { Pill } from '@/components/common/Pill';
 import { Screen, screenStyles } from '@/components/common/Screen';
+import { VehiclePhoto } from '@/components/vehicles/VehiclePhoto';
 import { palette } from '@/constants/theme';
 import { useBooking } from '@/hooks/useBookings';
 import type { Booking } from '@/types/booking';
@@ -85,7 +85,7 @@ export default function BookingConfirmationScreen() {
 
         <Card style={styles.card}>
           <View style={styles.vehicleRow}>
-            <Image source={{ uri: data.vehicle.imageUrl }} style={styles.image} contentFit="cover" />
+            <VehiclePhoto uri={data.vehicle.imageUrl} style={styles.image} />
             <View style={styles.vehicleCopy}>
               <Text style={styles.small}>Vehicle</Text>
               <Text style={styles.vehicleName}>{data.vehicle.name}</Text>

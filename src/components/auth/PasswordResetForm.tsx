@@ -43,7 +43,8 @@ export function PasswordResetForm() {
         </View>
         <Text style={styles.successTitle}>Check your email</Text>
         <Text style={styles.successText}>If an ARC Ride account uses {email.trim()}, we sent a link to reset your password.</Text>
-        <Button label="Back to Login" onPress={() => router.replace('/login')} style={styles.stretch} />
+        {/* dismissTo returns to the Login screen already in the stack instead of stacking a second one. */}
+        <Button label="Back to Login" onPress={() => router.dismissTo('/login')} style={styles.stretch} />
       </View>
     );
   }

@@ -1,5 +1,6 @@
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, Easing, Pressable, Text, View } from 'react-native';
 
 import { palette } from '@/constants/theme';
 
@@ -27,26 +28,54 @@ export function BottomTabBar({ state, navigation, insets, unreadCount }: BottomT
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
         };
-        return (
-          <Pressable
-            key={route.key}
-            onPress={onPress}
-            style={styles.item}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: focused }}
-            accessibilityLabel={badge ? `${tab.label}, ${badge} unread` : tab.label}>
-            <View style={[styles.iconPill, focused && styles.iconPillActive]}>
-              <Icon name={tab.icon} size={19} color={focused ? palette.white : palette.mutedLight} />
-              {badge > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
-                </View>
-              )}
-            </View>
-            <Text style={[styles.label, focused && styles.labelActive]}>{tab.label}</Text>
-          </Pressable>
-        );
+        return <TabItem key={route.key} label={tab.label} icon={tab.icon} focused={focused} badge={badge} onPress={onPress} />;
       })}
     </View>
+  );
+}
+
+interface TabItemProps {
+  label: string;
+  icon: IconName;
+  focused: boolean;
+  badge: number;
+  onPress: () => void;
+}
+
+/** One tab button. The blue pill fades and grows in, and the grey and white icons cross-fade. */
+function TabItem({ label, icon, focused, badge, onPress }: TabItemProps) {
+  // 0 = inactive, 1 = active. Starts at the current state so nothing animates on first render.
+  const [progress] = useState(() => new Animated.Value(focused ? 1 : 0));
+
+  useEffect(() => {
+    Animated.timing(progress, { toValue: focused ? 1 : 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [focused, progress]);
+
+  const pillScale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] });
+  const inactiveOpacity = progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={badge ? `${label}, ${badge} unread` : label}>
+      <View style={styles.iconPill}>
+        <Animated.View style={[styles.pillFill, { opacity: progress, transform: [{ scale: pillScale }] }]} />
+        <Animated.View style={{ opacity: inactiveOpacity }}>
+          <Icon name={icon} size={19} color={palette.mutedLight} />
+        </Animated.View>
+        <Animated.View style={[styles.iconOverlay, { opacity: progress }]}>
+          <Icon name={icon} size={19} color={palette.white} />
+        </Animated.View>
+        {badge > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+          </View>
+        )}
+      </View>
+      <Text style={[styles.label, focused && styles.labelActive]}>{label}</Text>
+    </Pressable>
   );
 }

@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/common/Button';
-import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { ErrorMessage, NoticeBox } from '@/components/common/ErrorMessage';
 import { FormField } from '@/components/common/FormField';
+import { apiConfig } from '@/constants/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubmit } from '@/hooks/useSubmit';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
+import { focusNextField } from '@/utils/focusNextField';
 import { hasErrors, MIN_PASSWORD_LENGTH, rules, validate } from '@/utils/validation';
 
 import { styles } from './RegisterForm.styles';
@@ -19,6 +21,11 @@ export function RegisterForm() {
   const [values, setValues] = useState<Record<Field, string>>({ name: '', email: '', phone: '', password: '', passwordConfirmation: '' });
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const { submit, isSubmitting, error, reset } = useSubmit(register);
+  // The keyboard's "Next" key moves through the fields in order.
+  const emailRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
 
   const update = (field: Field) => (text: string) => {
     setValues((current) => ({ ...current, [field]: text }));
@@ -46,8 +53,9 @@ export function RegisterForm() {
   return (
     <View>
       <ErrorMessage message={getFormError(error, FIELDS)} />
-      <FormField label="Full name" icon="user" placeholder="Juan Dela Cruz" value={values.name} onChangeText={update('name')} error={fieldError('name')} autoComplete="name" textContentType="name" autoCapitalize="words" />
+      <FormField label="Full name" icon="user" placeholder="Juan Dela Cruz" value={values.name} onChangeText={update('name')} error={fieldError('name')} autoComplete="name" textContentType="name" autoCapitalize="words" returnKeyType="next" submitBehavior="submit" onSubmitEditing={() => focusNextField(emailRef)} />
       <FormField
+        ref={emailRef}
         label="Email address"
         icon="mail"
         placeholder="juan@email.com"
@@ -58,8 +66,12 @@ export function RegisterForm() {
         autoComplete="email"
         keyboardType="email-address"
         textContentType="emailAddress"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => focusNextField(phoneRef)}
       />
       <FormField
+        ref={phoneRef}
         label="Phone number"
         icon="phone"
         placeholder="+63 9XX XXX XXXX"
@@ -69,8 +81,12 @@ export function RegisterForm() {
         keyboardType="phone-pad"
         autoComplete="tel"
         textContentType="telephoneNumber"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => focusNextField(passwordRef)}
       />
       <FormField
+        ref={passwordRef}
         label="Password"
         icon="lock"
         placeholder={`Min. ${MIN_PASSWORD_LENGTH} characters`}
@@ -80,8 +96,12 @@ export function RegisterForm() {
         secureTextEntry
         autoComplete="new-password"
         textContentType="newPassword"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => focusNextField(confirmRef)}
       />
       <FormField
+        ref={confirmRef}
         label="Confirm password"
         icon="lock"
         placeholder="Repeat password"
@@ -96,8 +116,11 @@ export function RegisterForm() {
       />
       <Button label="Create Account" icon="check-circle" onPress={onSubmit} loading={isSubmitting} style={styles.submit} />
       <Text style={styles.terms}>
-        By creating an account, you agree to our <Text style={styles.termsLink}>Terms of Service</Text> and <Text style={styles.termsLink}>Privacy Policy</Text>.
+        By creating an account, you agree to our <Text style={styles.termsStrong}>Terms of Service</Text> and <Text style={styles.termsStrong}>Privacy Policy</Text>.
       </Text>
+      {apiConfig.useMockApi && (
+        <NoticeBox tone="blue">Development mock mode, not real authentication. This test account is kept in memory only and disappears when the app reloads.</NoticeBox>
+      )}
     </View>
   );
 }

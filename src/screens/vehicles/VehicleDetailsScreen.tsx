@@ -50,7 +50,7 @@ export default function VehicleDetailsScreen() {
         refreshControl={<RefreshControl refreshing={vehicle.isRefreshing} onRefresh={vehicle.refresh} tintColor={palette.blue} />}>
         <View>
           <VehicleImageGallery images={data.gallery.length ? data.gallery : [data.imageUrl]} name={data.name} />
-          <Pressable onPress={() => router.back()} style={[styles.backButton, { top: insets.top + 10 }]} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
+          <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} style={[styles.backButton, { top: insets.top + 10 }]} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
             <Icon name="chevron-left" size={22} color={palette.navy} />
           </Pressable>
         </View>
@@ -93,16 +93,25 @@ export default function VehicleDetailsScreen() {
             </View>
           </Card>
 
-          <Text style={styles.heading}>About this vehicle</Text>
-          <Text style={styles.paragraph}>{data.description}</Text>
+          {/* Optional details from the admin website: hide a section instead of showing an empty heading. */}
+          {data.description.trim() ? (
+            <>
+              <Text style={styles.heading}>About this vehicle</Text>
+              <Text style={styles.paragraph}>{data.description}</Text>
+            </>
+          ) : null}
 
-          <Text style={styles.heading}>Included features</Text>
-          {data.features.map((feature) => (
-            <View key={feature} style={styles.feature}>
-              <Icon name="check-circle" size={16} color={palette.green} />
-              <Text style={styles.featureText}>{feature}</Text>
-            </View>
-          ))}
+          {data.features.length > 0 && (
+            <>
+              <Text style={styles.heading}>Included features</Text>
+              {data.features.map((feature) => (
+                <View key={feature} style={styles.feature}>
+                  <Icon name="check-circle" size={16} color={palette.green} />
+                  <Text style={styles.featureText}>{feature}</Text>
+                </View>
+              ))}
+            </>
+          )}
 
           {agreement.data && (
             <>
@@ -142,8 +151,13 @@ function Spec({ icon, label, value }: { icon: IconName; label: string; value: st
   return (
     <View style={styles.spec}>
       <Icon name={icon} size={18} color={palette.blue} />
-      <Text style={styles.specValue}>{value}</Text>
-      <Text style={styles.specLabel}>{label}</Text>
+      {/* Shrink instead of wrapping on narrow phones. */}
+      <Text style={styles.specValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+        {value}
+      </Text>
+      <Text style={styles.specLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+        {label}
+      </Text>
     </View>
   );
 }

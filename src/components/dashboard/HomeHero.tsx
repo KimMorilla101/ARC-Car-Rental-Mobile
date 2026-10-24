@@ -9,7 +9,9 @@ import { gradients } from '@/constants/theme';
 
 import { styles } from './HomeHero.styles';
 
-// Marketing figures from the Figma design. Confirm the real numbers with ARC before release.
+// Placeholder marketing figures from the Figma design, NOT real ARC data. Hidden until ARC confirms the
+// real numbers: replace the values below, then set SHOW_STATS to true.
+const SHOW_STATS = false;
 const stats = [
   { value: '500+', label: 'Satisfied Customers' },
   { value: '50+', label: 'Premium Vehicles' },
@@ -37,14 +39,16 @@ export function HomeHero() {
         <Button label="Browse Cars" icon="truck" trailingIcon="arrow-right" size="sm" onPress={() => router.push('/browse')} style={styles.button} />
         <Button label="Smart Match" icon="star" variant="onDarkOutline" size="sm" onPress={() => router.push({ pathname: '/browse', params: { sort: 'recommended' } })} style={styles.button} />
       </View>
-      <View style={styles.stats}>
-        {stats.map((item) => (
-          <View key={item.label} style={styles.stat}>
-            <Text style={styles.statValue}>{item.value}</Text>
-            <Text style={styles.statLabel}>{item.label}</Text>
-          </View>
-        ))}
-      </View>
+      {SHOW_STATS && (
+        <View style={styles.stats}>
+          {stats.map((item) => (
+            <View key={item.label} style={styles.stat}>
+              <Text style={styles.statValue}>{item.value}</Text>
+              <Text style={styles.statLabel}>{item.label}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ImageBackground>
   );
 }

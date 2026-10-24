@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Screen, screenStyles } from '@/components/common/Screen';
 import { SearchField } from '@/components/common/SearchField';
 import { Select } from '@/components/common/Select';
+import { NoCarsYet } from '@/components/vehicles/NoCarsYet';
 import { VehicleCard } from '@/components/vehicles/VehicleCard';
 import { CategoryChips, countAdvancedFilters, sortOptions, VehicleFilterSheet } from '@/components/vehicles/VehicleFilters';
 import { palette } from '@/constants/theme';
@@ -49,6 +50,8 @@ export default function VehiclesScreen() {
   const vehicles = useVehicles({ ...filters, search: debouncedSearch || undefined });
   const activeFilters = countAdvancedFilters(filters);
   const result = vehicles.data;
+  // An empty fleet is different from filters that hide every car: there is nothing to clear.
+  const fleetEmpty = result?.fleetSize === 0;
 
   const resetAll = () => {
     setSearch('');
@@ -57,7 +60,7 @@ export default function VehiclesScreen() {
 
   const header = (
     <View>
-      <PageHeader title="Browse Cars" subtitle={result ? `Explore our fleet of ${result.fleetSize} premium vehicles` : 'Explore our premium fleet'} />
+      <PageHeader title="Browse Cars" subtitle={result && !fleetEmpty ? `Explore our fleet of ${result.fleetSize} premium vehicles` : 'Explore our premium fleet'} />
       <View style={styles.searchRow}>
         <View style={styles.searchField}>
           <SearchField value={search} onChangeText={setSearch} placeholder="Search by name or type" />
@@ -89,15 +92,17 @@ export default function VehiclesScreen() {
       <View style={styles.chips}>
         <CategoryChips value={filters.category} onChange={(category) => setFilters((current) => ({ ...current, category }))} />
       </View>
-      <Text style={styles.resultCount}>
-        {result ? (
-          <>
-            Showing <Text style={styles.resultStrong}>{result.vehicles.length}</Text> of <Text style={styles.resultStrong}>{result.fleetSize}</Text> vehicles
-          </>
-        ) : (
-          'Searching…'
-        )}
-      </Text>
+      {!fleetEmpty && (
+        <Text style={styles.resultCount}>
+          {result ? (
+            <>
+              Showing <Text style={styles.resultStrong}>{result.vehicles.length}</Text> of <Text style={styles.resultStrong}>{result.fleetSize}</Text> vehicles
+            </>
+          ) : (
+            'Searching…'
+          )}
+        </Text>
+      )}
     </View>
   );
 
@@ -113,6 +118,8 @@ export default function VehiclesScreen() {
             <VehicleListSkeleton />
           ) : vehicles.error ? (
             <ErrorState error={vehicles.error} onRetry={vehicles.refetch} />
+          ) : fleetEmpty ? (
+            <NoCarsYet />
           ) : (
             <EmptyState icon="search" title="No cars found" message="Try another search, category, or filter." actionLabel="Clear filters" onAction={resetAll} />
           )

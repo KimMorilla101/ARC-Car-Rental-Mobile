@@ -2,6 +2,9 @@
  * TEMPORARY in-memory data used only when EXPO_PUBLIC_USE_MOCK_API=true in a development build.
  * Delete this folder once the Laravel API is live. Nothing outside src/services may import it.
  *
+ * Mock sign-in is NOT real authentication: accounts live in memory and anyone can use the demo login.
+ * It exists only so the screens can be tested before the Laravel API is ready.
+ *
  * Values mirror the Figma prototype. The real fees, fleet and content are owned by Laravel.
  */
 import type { User } from '@/types/auth';
@@ -18,31 +21,17 @@ export const MOCK_POLICY = {
 
 export const MOCK_TOKEN_PREFIX = 'mock-token-';
 
-const photo = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1000&q=85`;
-const IMG = {
-  sedanGrey: photo('photo-1503376780353-7e6692767b70'),
-  sedanSilver: photo('photo-1552519507-da3b142c6e3d'),
-  suvBlack: photo('photo-1606664515524-ed2f786a0bd6'),
-  mpvWhite: photo('photo-1549317661-bd32c8ce0db2'),
-  pickup: photo('photo-1551830820-330a71b99659'),
-  hatch: photo('photo-1492144534655-ae79c964c9d7'),
-  road: photo('photo-1493238792000-8113da705763'),
-};
-
-type VehicleSeed = Omit<Vehicle, 'gallery' | 'doors' | 'matchScore'> & { doors?: number; matchScore?: number };
-const vehicle = (seed: VehicleSeed): Vehicle => ({ doors: 4, matchScore: null, gallery: [seed.imageUrl, IMG.road], ...seed });
-
+// No sample fleet. Real vehicles, photos and prices are added by the administrator through the admin
+// website and served by the Laravel API. Only one clearly labelled test car exists, for testing.
 export const mockVehicles: Vehicle[] = [
-  vehicle({ id: 1, name: 'Toyota Camry 2024', category: 'Sedan', rates: { hourly: 350, daily: 2500, monthly: 52000 }, imageUrl: IMG.sedanGrey, seats: 5, transmission: 'Automatic', fuel: 'Gasoline', rating: 4.8, reviewCount: 124, isPopular: true, description: 'The Toyota Camry 2024 combines elegant styling with exceptional comfort and reliability. Perfect for business trips and family weekends.', features: ['Apple CarPlay & Android Auto', 'Adaptive cruise control', 'Backup camera', 'Dual-zone climate control'], availableUnits: 2, matchScore: 96 }),
-  vehicle({ id: 2, name: 'Honda CR-V 2024', category: 'SUV', rates: { hourly: 420, daily: 3200, monthly: 66000 }, imageUrl: IMG.suvBlack, seats: 5, transmission: 'Automatic', fuel: 'Gasoline', rating: 4.7, reviewCount: 98, isPopular: true, description: 'A roomy, refined SUV with a smooth ride and plenty of cargo space for out-of-town trips.', features: ['Honda Sensing safety suite', 'Large cargo area', 'Apple CarPlay', 'Rear camera'], availableUnits: 1, matchScore: 93 }),
-  vehicle({ id: 3, name: 'Toyota Fortuner 2024', category: 'SUV', rates: { hourly: 480, daily: 3800, monthly: 78000 }, imageUrl: IMG.suvBlack, seats: 7, transmission: 'Automatic', fuel: 'Diesel', rating: 4.9, reviewCount: 156, isPopular: true, description: 'A rugged 7-seater built for mountain roads and long family drives.', features: ['7 seats', '4x2 diesel engine', 'Hill start assist', 'Rear air vents'], availableUnits: 1, matchScore: 90 }),
-  vehicle({ id: 4, name: 'Honda Civic 2024', category: 'Sedan', rates: { hourly: 330, daily: 2400, monthly: 50000 }, imageUrl: IMG.sedanSilver, seats: 5, transmission: 'Automatic', fuel: 'Gasoline', rating: 4.7, reviewCount: 87, isPopular: false, description: 'Sporty, efficient and easy to park, ideal for city driving.', features: ['Turbo engine', 'Lane keep assist', 'Wireless charging', 'Rear camera'], availableUnits: 0 }),
-  vehicle({ id: 5, name: 'Toyota Vios 2024', category: 'Sedan', rates: { hourly: 250, daily: 1800, monthly: 36000 }, imageUrl: IMG.sedanSilver, seats: 5, transmission: 'Automatic', fuel: 'Gasoline', rating: 4.6, reviewCount: 142, isPopular: false, description: 'A dependable, fuel-efficient sedan with a quiet cabin.', features: ['Air conditioning', 'Bluetooth audio', 'Backup camera', 'USB charging'], availableUnits: 3 }),
-  vehicle({ id: 6, name: 'Mitsubishi Xpander 2024', category: 'MPV', rates: { hourly: 300, daily: 2300, monthly: 46000 }, imageUrl: IMG.mpvWhite, seats: 7, transmission: 'Automatic', fuel: 'Gasoline', rating: 4.6, reviewCount: 76, isPopular: false, description: 'A comfortable people mover built for family trips and airport runs.', features: ['7 seats', 'Rear air vents', 'Smart entry', 'Spacious interior'], availableUnits: 2 }),
-  vehicle({ id: 7, name: 'Toyota Hiace 2024', category: 'MPV', rates: { hourly: 600, daily: 4500, monthly: 90000 }, imageUrl: IMG.mpvWhite, seats: 12, doors: 4, transmission: 'Manual', fuel: 'Diesel', rating: 4.5, reviewCount: 41, isPopular: false, description: 'A 12-seater van for group tours, events and company outings.', features: ['12 seats', 'Dual air conditioning', 'Large luggage space', 'Sliding door'], availableUnits: 1 }),
-  vehicle({ id: 8, name: 'Toyota Hilux 2024', category: 'Pickup', rates: { hourly: 400, daily: 3000, monthly: 60000 }, imageUrl: IMG.pickup, seats: 5, transmission: 'Manual', fuel: 'Diesel', rating: 4.7, reviewCount: 63, isPopular: false, description: 'A durable pickup for work trips, equipment and open-road travel.', features: ['Bed liner', '4x2 drive', 'Hill start assist', 'Bluetooth audio'], availableUnits: 1 }),
-  vehicle({ id: 9, name: 'Mercedes-Benz C-Class 2024', category: 'Luxury', rates: { hourly: 1100, daily: 8000, monthly: 160000 }, imageUrl: IMG.sedanGrey, seats: 5, transmission: 'Automatic', fuel: 'Gasoline', rating: 4.9, reviewCount: 35, isPopular: false, description: 'Premium comfort for weddings, VIP transfers and special occasions.', features: ['Leather interior', 'Ambient lighting', 'Burmester sound', 'Parking assist'], availableUnits: 1 }),
-  vehicle({ id: 10, name: 'Honda City Hatchback 2024', category: 'Hatchback', rates: { hourly: 260, daily: 1900, monthly: 38000 }, imageUrl: IMG.hatch, seats: 5, doors: 5, transmission: 'Automatic', fuel: 'Gasoline', rating: 4.6, reviewCount: 58, isPopular: false, description: 'A compact and efficient hatchback for easy city exploration.', features: ['Rear camera', 'Keyless entry', 'Bluetooth audio', 'Air conditioning'], availableUnits: 2 }),
+  // TEST CAR, NOT REAL: kept (owner's decision) so Car Details and Booking can be tested in mock mode
+  // until real cars are uploaded through the admin website. Mock data is ignored in release builds.
+  // Delete this entry to see the "No cars available yet" empty state again.
+  {
+    id: 9999, name: 'TEST CAR (not real)', category: 'Sedan', rates: { hourly: 1, daily: 1, monthly: 1 }, imageUrl: '', gallery: [],
+    seats: 5, doors: 4, transmission: 'Automatic', fuel: 'Gasoline', rating: null, reviewCount: 0, isPopular: false,
+    description: 'Temporary test vehicle for checking the app. It is not a real ARC car.', features: ['Test feature'], availableUnits: 1, matchScore: null,
+  },
 ];
 
 export const mockLocations: BookingLocations = {
@@ -73,7 +62,7 @@ export function requirementTemplate(): BookingRequirement[] {
   ];
 }
 
-/** A date `days` from now at a fixed hour, so demo bookings stay relevant whenever the app runs. */
+/** A date `days` from now at a fixed hour, so demo data stays relevant whenever the app runs. */
 function atHour(days: number, hour: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
@@ -95,48 +84,11 @@ export function priceFor(rentalFee: number, deliveryFee = 0, extras: { lateRetur
   };
 }
 
-const withStatus = (status: BookingRequirement['status']) => requirementTemplate().map((item) => ({ ...item, status }));
-const MAIN_BRANCH = mockLocations.branches[0].name;
-
-export const mockBookings: (Booking & { userId: User['id'] })[] = [
-  {
-    id: 795, userId: 1, reference: 'BK-2026-0795', vehicle: mockVehicles[3], unitLabel: 'Honda Civic Unit 02',
-    pickupAt: atHour(-3, 14), returnAt: atHour(0, 23), rentalDays: 3, deliveryMethod: 'shop_pickup', pickupLocation: 'ARC SM Lanang Branch', deliveryAddress: null, destination: 'Samal Island',
-    status: 'active', payment: { method: 'cash', status: 'paid', proofUrl: null }, pricing: priceFor(7200),
-    requirements: withStatus('verified'), extension: null, canRequestExtension: true, trustScore: 92, createdAt: atHour(-6, 10),
-  },
-  {
-    id: 891, userId: 1, reference: 'BK-2026-0891', vehicle: mockVehicles[2], unitLabel: 'Toyota Fortuner Unit 01',
-    pickupAt: atHour(2, 9), returnAt: atHour(5, 9), rentalDays: 3, deliveryMethod: 'shop_pickup', pickupLocation: MAIN_BRANCH, deliveryAddress: null, destination: 'Mati City',
-    status: 'confirmed', payment: { method: 'bank_transfer', status: 'paid', proofUrl: 'mock://proof' }, pricing: priceFor(12900),
-    requirements: withStatus('verified'), extension: null, canRequestExtension: false, trustScore: 92, createdAt: atHour(-4, 15),
-  },
-  {
-    id: 874, userId: 1, reference: 'BK-2026-0874', vehicle: mockVehicles[0], unitLabel: null,
-    pickupAt: atHour(8, 9), returnAt: atHour(13, 9), rentalDays: 5, deliveryMethod: 'delivery', pickupLocation: 'Lanang, Davao City', deliveryAddress: 'Lanang, Davao City', destination: 'Davao City',
-    status: 'pending_verification', payment: { method: 'online', status: 'pending_verification', proofUrl: 'mock://proof' }, pricing: priceFor(12500, 300),
-    requirements: withStatus('pending_verification'), extension: null, canRequestExtension: false, trustScore: 92, createdAt: atHour(-1, 11),
-  },
-  {
-    id: 612, userId: 1, reference: 'BK-2026-0612', vehicle: mockVehicles[1], unitLabel: 'Honda CR-V Unit 01',
-    pickupAt: atHour(-58, 9), returnAt: atHour(-53, 9), rentalDays: 5, deliveryMethod: 'shop_pickup', pickupLocation: MAIN_BRANCH, deliveryAddress: null, destination: 'Bukidnon',
-    status: 'completed', payment: { method: 'cash', status: 'paid', proofUrl: null }, pricing: priceFor(16000),
-    requirements: withStatus('verified'), extension: null, canRequestExtension: false, trustScore: 92, createdAt: atHour(-62, 9),
-  },
-  {
-    id: 540, userId: 1, reference: 'BK-2026-0540', vehicle: mockVehicles[5], unitLabel: null,
-    pickupAt: atHour(-80, 9), returnAt: atHour(-78, 9), rentalDays: 2, deliveryMethod: 'shop_pickup', pickupLocation: MAIN_BRANCH, deliveryAddress: null, destination: 'Digos City',
-    status: 'cancelled', payment: { method: 'cash', status: 'awaiting_payment', proofUrl: null }, pricing: priceFor(4600),
-    requirements: withStatus('missing'), extension: null, canRequestExtension: false, trustScore: 92, createdAt: atHour(-85, 9),
-  },
-];
+// No sample bookings, since every booking belongs to a car. Bookings created in mock mode are kept
+// here until the app reloads.
+export const mockBookings: (Booking & { userId: User['id'] })[] = [];
 
 export const mockNotifications: (AppNotification & { userId: User['id'] })[] = [
-  { id: 6, userId: 1, type: 'late_return', title: 'Return Deadline Approaching', body: 'Reminder: your Honda Civic (BK-2026-0795) is due for return today. Please return it to ARC SM Lanang Branch on time.', bookingId: 795, readAt: null, createdAt: atHour(0, 7) },
-  { id: 5, userId: 1, type: 'payment', title: 'Payment Proof Received', body: 'We received your payment proof for BK-2026-0874. Our team is verifying your payment and documents. We will notify you once confirmed.', bookingId: 874, readAt: null, createdAt: atHour(-1, 13) },
-  { id: 4, userId: 1, type: 'extension', title: 'Extension Request Submitted', body: 'Your extension request for BK-2026-0795 (Honda Civic) is pending approval. We will notify you once a decision is made.', bookingId: 795, readAt: null, createdAt: atHour(-1, 9) },
-  { id: 3, userId: 1, type: 'booking', title: 'Booking Confirmed!', body: 'Your booking BK-2026-0891 for Toyota Fortuner has been confirmed. Pickup is at the ARC Ecoland Branch.', bookingId: 891, readAt: null, createdAt: atHour(-2, 10) },
-  { id: 2, userId: 1, type: 'rental', title: 'Rental Completed', body: 'Thanks for renting the Honda CR-V (BK-2026-0612). Your Trust Score has been updated.', bookingId: 612, readAt: atHour(-52, 10), createdAt: atHour(-53, 12) },
   { id: 1, userId: 1, type: 'general', title: 'Welcome to ARC Ride', body: 'Your account is ready. Browse our fleet and book your first ride.', bookingId: null, readAt: atHour(-90, 9), createdAt: atHour(-90, 8) },
 ];
 

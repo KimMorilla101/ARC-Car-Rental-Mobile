@@ -46,8 +46,10 @@ export function ProfileImagePicker() {
 }
 
 export function Avatar({ name, url, size = 76 }: { name: string; url: string | null; size?: number }) {
+  // A broken photo link falls back to the initials. Reset when a new photo URL arrives.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const shape = { width: size, height: size, borderRadius: size / 2 };
-  if (url) return <Image source={{ uri: url }} style={shape} contentFit="cover" accessibilityLabel={`${name}'s photo`} />;
+  if (url && url !== failedUrl) return <Image source={{ uri: url }} style={shape} contentFit="cover" onError={() => setFailedUrl(url)} accessibilityLabel={`${name}'s photo`} />;
   return (
     <View style={[styles.initials, shape]}>
       <Text style={[styles.initialsText, { fontSize: size * 0.32 }]}>{initials(name)}</Text>

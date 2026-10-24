@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
@@ -17,6 +16,7 @@ import { Pill, type PillTone } from '@/components/common/Pill';
 import { Screen, screenStyles } from '@/components/common/Screen';
 import { PaymentProofUploader } from '@/components/payment/PaymentProofUploader';
 import { TrustScoreBanner } from '@/components/profile/TrustScore';
+import { VehiclePhoto } from '@/components/vehicles/VehiclePhoto';
 import { palette } from '@/constants/theme';
 import { useRefetchOnFocus } from '@/hooks/useApiQuery';
 import { useBooking } from '@/hooks/useBookings';
@@ -108,7 +108,7 @@ export default function BookingDetailsScreen() {
           <Pill tone={bookingStatusTone(data.status)}>{bookingStatusLabel[data.status]}</Pill>
         </View>
 
-        <Image source={{ uri: data.vehicle.imageUrl }} style={styles.image} contentFit="cover" />
+        <VehiclePhoto uri={data.vehicle.imageUrl} style={styles.image} label />
 
         {returnMode && (
           <View style={styles.returnBanner} accessibilityRole="alert">

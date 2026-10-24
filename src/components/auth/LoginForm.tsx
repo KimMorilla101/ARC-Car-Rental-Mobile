@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/common/Button';
 import { Checkbox } from '@/components/common/Checkbox';
@@ -10,6 +10,7 @@ import { apiConfig } from '@/constants/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubmit } from '@/hooks/useSubmit';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
+import { focusNextField } from '@/utils/focusNextField';
 import { hasErrors, rules, validate } from '@/utils/validation';
 
 import { styles } from './LoginForm.styles';
@@ -21,6 +22,7 @@ export function LoginForm() {
   const { signIn } = useAuth();
   const [values, setValues] = useState({ email: '', password: '' });
   const [remember, setRemember] = useState(true);
+  const passwordRef = useRef<TextInput>(null);
   const [errors, setErrors] = useState<Partial<Record<(typeof FIELDS)[number], string>>>({});
   const { submit, isSubmitting, error, reset } = useSubmit(signIn);
 
@@ -59,8 +61,11 @@ export function LoginForm() {
         keyboardType="email-address"
         textContentType="emailAddress"
         returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => focusNextField(passwordRef)}
       />
       <FormField
+        ref={passwordRef}
         label="Password"
         icon="lock"
         placeholder="Enter your password"
@@ -88,7 +93,7 @@ export function LoginForm() {
       </View>
       {apiConfig.useMockApi && (
         <View style={styles.demo}>
-          <Text style={styles.demoText}>Demo data mode: sign in with juan@example.com / password123</Text>
+          <Text style={styles.demoText}>Development mock mode, not real authentication. Demo login: juan@example.com / password123</Text>
         </View>
       )}
     </View>

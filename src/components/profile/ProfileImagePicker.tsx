@@ -7,7 +7,7 @@ import { palette } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { profileApi } from '@/services/profileApi';
 import { getErrorMessage } from '@/utils/errorHandler';
-import { pickImage } from '@/utils/filePicker';
+import { discardTemporaryFile, pickImage } from '@/utils/filePicker';
 import { initials } from '@/utils/formatters';
 
 import { styles } from './ProfileImagePicker.styles';
@@ -26,7 +26,11 @@ export function ProfileImagePicker() {
     if (!('file' in picked)) return;
     setUploading(true);
     try {
-      updateUser(await profileApi.uploadAvatar(picked.file));
+      const saved = await profileApi.uploadAvatar(picked.file);
+      updateUser(saved);
+      // Remove the temporary copy once the server has the photo. Mock mode shows the local copy
+      // itself, so keep it there.
+      if (saved.avatarUrl !== picked.file.uri) discardTemporaryFile(picked.file.uri);
     } catch (caught) {
       setError(getErrorMessage(caught));
     } finally {

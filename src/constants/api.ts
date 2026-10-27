@@ -40,6 +40,8 @@ function resolveBaseUrl(): string {
 }
 
 function validateBaseUrl(url: string): string | null {
+  // Fail closed: a release build configured for mock mode must never fall back to fake success.
+  if (!__DEV__ && process.env.EXPO_PUBLIC_USE_MOCK_API === 'true') return 'This build is misconfigured: development mock mode cannot be used in a release build.';
   if (!url) return 'EXPO_PUBLIC_API_BASE_URL is not set for this build.';
   if (!__DEV__ && !url.startsWith('https://')) return 'Production builds must use an HTTPS API URL.';
   return null;
@@ -55,6 +57,7 @@ export const apiConfig = {
   /**
    * Temporary in-memory mock services, used while the Laravel API is being built.
    * Only honoured in development builds so a release can never show fake data or fake success.
+   * The mock code itself is loaded only through `services/devMocks.ts`, which release builds drop.
    */
   useMockApi: __DEV__ && process.env.EXPO_PUBLIC_USE_MOCK_API === 'true',
 } as const;

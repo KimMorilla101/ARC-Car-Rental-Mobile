@@ -1,11 +1,10 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type { Id } from '@/types/api';
 import type { Booking } from '@/types/booking';
 import type { ExtensionOptions, ExtensionRequestPayload, ReturnSummary } from '@/types/rental';
 
 import { apiRequest, type Resource } from './api';
-import { mockRentalApi } from './mock/mockBookingApi';
+import { devMocks } from './devMocks';
 
 export interface RentalApi {
   /** Priced extension choices for a booking; the deadline check is enforced by the server. */
@@ -23,4 +22,4 @@ const httpRentalApi: RentalApi = {
     (await apiRequest<Resource<ReturnSummary>>(ENDPOINTS.rentals.returnSummary, { params: { id: bookingId } })).data,
 };
 
-export const rentalApi: RentalApi = apiConfig.useMockApi ? mockRentalApi : httpRentalApi;
+export const rentalApi: RentalApi = devMocks?.mockRentalApi ?? httpRentalApi;

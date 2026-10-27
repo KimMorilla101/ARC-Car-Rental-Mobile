@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
   unread: { borderColor: palette.blueTint },
   body: { flex: 1 },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  title: { color: palette.navy, fontSize: 15, fontFamily: font.bold, flexShrink: 1 },
+  title: { color: palette.navy, fontSize: 14, fontFamily: font.bold, flexShrink: 1 },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: palette.blue },
   time: { color: palette.muted, fontSize: 11, fontFamily: font.regular },

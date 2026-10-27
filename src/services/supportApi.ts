@@ -1,8 +1,7 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 
 import { apiRequest } from './api';
-import { mockSupportApi } from './mock/mockNotificationApi';
+import { devMocks } from './devMocks';
 
 export interface ContactPayload {
   email: string;
@@ -17,4 +16,4 @@ const httpSupportApi: SupportApi = {
   contact: (payload) => apiRequest<void>(ENDPOINTS.support.contact, { method: 'POST', body: payload }),
 };
 
-export const supportApi: SupportApi = apiConfig.useMockApi ? mockSupportApi : httpSupportApi;
+export const supportApi: SupportApi = devMocks?.mockSupportApi ?? httpSupportApi;

@@ -1,6 +1,7 @@
 /**
  * TEMPORARY in-memory data used only when EXPO_PUBLIC_USE_MOCK_API=true in a development build.
- * Delete this folder once the Laravel API is live. Nothing outside src/services may import it.
+ * Delete this folder once the Laravel API is live. Only services/devMocks.ts may load it (inside a
+ * `__DEV__` check), so release builds never contain these fixtures.
  *
  * Mock sign-in is NOT real authentication: accounts live in memory and anyone can use the demo login.
  * It exists only so the screens can be tested before the Laravel API is ready.

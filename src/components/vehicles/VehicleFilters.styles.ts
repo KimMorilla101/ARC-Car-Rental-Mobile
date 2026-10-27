@@ -17,7 +17,7 @@ export const styles = StyleSheet.create({
   radioSelected: { borderColor: palette.blue },
   radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: palette.blue },
   radioLabel: { color: palette.ink, fontSize: 14, fontFamily: font.regular },
-  priceValue: { color: palette.blue, fontSize: 15, fontFamily: font.extrabold },
+  priceValue: { color: palette.blue, fontSize: 14, fontFamily: font.bold },
   footer: { flexDirection: 'row', gap: 10, paddingHorizontal: gutter, paddingTop: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: palette.divider },
   footerButton: { flex: 1 },
 });

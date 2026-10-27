@@ -52,16 +52,24 @@ export const palette = {
 } as const;
 
 /**
- * Font families. Custom fonts ignore `fontWeight` on Android, so always pick the family
- * for the weight you want instead of setting fontWeight.
+ * Font families: DM Serif Display for large brand titles, Inter for everything else. Custom fonts
+ * ignore `fontWeight` on Android, so always pick the family for the weight you want instead.
+ *
+ * Type scale: 11 · 12 · 13 · 14 · 16 · 18 · 20 · 24 · 28 · 32 · 40. Text at 13px or smaller uses
+ * semibold at most; bold is the heaviest weight.
+ *
+ * Native system fonts are never bundled: SF Pro (iOS) and Roboto (Android) appear only where the
+ * operating system draws its own UI — date/time pickers, the photo picker, the keyboard — and in the
+ * crash screen (ErrorBoundary), which avoids custom fonts in case they failed to load. SF Pro's
+ * licence only covers Apple platforms. Proxima Nova is not used: it is a commercial font that needs
+ * a licence covering app embedding before its files can be added.
  */
 export const font = {
   display: 'DMSerifDisplay_400Regular',
-  regular: 'Outfit_400Regular',
-  medium: 'Outfit_500Medium',
-  semibold: 'Outfit_600SemiBold',
-  bold: 'Outfit_700Bold',
-  extrabold: 'Outfit_800ExtraBold',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
 } as const;
 
 export const gradients = {
@@ -88,11 +96,12 @@ export const shadow = {
 
 /** Reusable text styles from the mockups. */
 export const text = {
-  pageTitle: { fontFamily: font.display, fontSize: 32, lineHeight: 38, color: palette.navy },
-  sectionTitle: { fontFamily: font.bold, fontSize: 18, color: palette.navy },
+  // Large serif titles read more polished with slightly tighter letter spacing.
+  pageTitle: { fontFamily: font.display, fontSize: 32, lineHeight: 38, letterSpacing: -0.3, color: palette.navy },
+  sectionTitle: { fontFamily: font.bold, fontSize: 18, lineHeight: 24, color: palette.navy },
   subtitle: { fontFamily: font.regular, fontSize: 14, lineHeight: 21, color: palette.muted },
   body: { fontFamily: font.regular, fontSize: 14, lineHeight: 21, color: palette.ink },
-  label: { fontFamily: font.bold, fontSize: 11, letterSpacing: 1, color: palette.label },
-  eyebrow: { fontFamily: font.bold, fontSize: 11, letterSpacing: 1.4 },
-  caption: { fontFamily: font.regular, fontSize: 12, color: palette.muted },
+  label: { fontFamily: font.semibold, fontSize: 11, letterSpacing: 1, color: palette.label },
+  eyebrow: { fontFamily: font.semibold, fontSize: 11, letterSpacing: 1.4 },
+  caption: { fontFamily: font.regular, fontSize: 12, lineHeight: 17, color: palette.muted },
 } satisfies Record<string, TextStyle>;

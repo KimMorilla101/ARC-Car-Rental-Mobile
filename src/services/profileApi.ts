@@ -1,10 +1,9 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type { UploadFile } from '@/types/api';
 import type { ChangePasswordPayload, UpdateProfilePayload, User } from '@/types/auth';
 
 import { apiRequest, toFormData, type Resource } from './api';
-import { mockProfileApi } from './mock/mockAuthApi';
+import { devMocks } from './devMocks';
 
 export interface ProfileApi {
   update(payload: UpdateProfilePayload): Promise<User>;
@@ -19,4 +18,4 @@ const httpProfileApi: ProfileApi = {
   changePassword: (payload) => apiRequest<void>(ENDPOINTS.profile.password, { method: 'PUT', body: payload }),
 };
 
-export const profileApi: ProfileApi = apiConfig.useMockApi ? mockProfileApi : httpProfileApi;
+export const profileApi: ProfileApi = devMocks?.mockProfileApi ?? httpProfileApi;

@@ -12,6 +12,8 @@ import { Platform } from 'react-native';
  */
 const TOKEN_KEY = 'arc_ride.auth_token';
 const canPersist = Platform.OS !== 'web';
+// Readable only while the phone is unlocked, and never copied to another device through backups.
+const STORE_OPTIONS: SecureStore.SecureStoreOptions = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY };
 
 let cachedToken: string | null = null;
 
@@ -25,7 +27,7 @@ export const tokenStorage = {
   async load(): Promise<string | null> {
     if (!canPersist) return cachedToken;
     try {
-      cachedToken = await SecureStore.getItemAsync(TOKEN_KEY);
+      cachedToken = await SecureStore.getItemAsync(TOKEN_KEY, STORE_OPTIONS);
     } catch {
       // A corrupted keychain entry must not block startup; treat it as logged out.
       cachedToken = null;
@@ -36,15 +38,15 @@ export const tokenStorage = {
   async save(token: string, remember: boolean): Promise<void> {
     cachedToken = token;
     if (!canPersist) return;
-    if (remember) await SecureStore.setItemAsync(TOKEN_KEY, token);
-    else await SecureStore.deleteItemAsync(TOKEN_KEY);
+    if (remember) await SecureStore.setItemAsync(TOKEN_KEY, token, STORE_OPTIONS);
+    else await SecureStore.deleteItemAsync(TOKEN_KEY, STORE_OPTIONS);
   },
 
   async clear(): Promise<void> {
     cachedToken = null;
     if (!canPersist) return;
     try {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await SecureStore.deleteItemAsync(TOKEN_KEY, STORE_OPTIONS);
     } catch {
       // Nothing else to do; the in-memory token is already gone.
     }

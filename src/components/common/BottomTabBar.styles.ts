@@ -12,6 +12,7 @@ export const styles = StyleSheet.create({
   iconOverlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   label: { color: palette.mutedLight, fontSize: 11, fontFamily: font.medium },
   labelActive: { color: palette.blue, fontFamily: font.bold },
-  badge: { position: 'absolute', top: -4, right: 4, minWidth: 17, height: 17, borderRadius: 9, backgroundColor: palette.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: palette.white },
-  badgeText: { color: palette.white, fontSize: 9, fontFamily: font.bold },
+  // zIndex keeps the badge above the animated pill and icon layers.
+  badge: { position: 'absolute', zIndex: 1, top: -4, right: 4, minWidth: 17, height: 17, borderRadius: 9, backgroundColor: palette.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: palette.white },
+  badgeText: { color: palette.white, fontSize: 10, fontFamily: font.semibold },
 });

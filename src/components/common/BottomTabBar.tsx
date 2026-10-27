@@ -3,27 +3,34 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, Text, View } from 'react-native';
 
 import { palette } from '@/constants/theme';
+import { badgeLabel } from '@/utils/badges';
 
 import { Icon, type IconName } from './Icon';
 import { styles } from './BottomTabBar.styles';
 
-const tabs: Record<string, { label: string; icon: IconName }> = {
+type BadgeKind = 'bookings' | 'notifications';
+
+const tabs: Record<string, { label: string; icon: IconName; badge?: BadgeKind }> = {
   home: { label: 'Home', icon: 'home' },
   browse: { label: 'Browse', icon: 'truck' },
-  bookings: { label: 'Bookings', icon: 'book-open' },
-  notifications: { label: 'Alerts', icon: 'bell' },
+  bookings: { label: 'Bookings', icon: 'book-open', badge: 'bookings' },
+  notifications: { label: 'Alerts', icon: 'bell', badge: 'notifications' },
   profile: { label: 'Profile', icon: 'user' },
 };
 
-/** Tab bar from the Figma design: the active icon sits in a blue pill; Alerts shows an unread badge. */
-export function BottomTabBar({ state, navigation, insets, unreadCount }: BottomTabBarProps & { unreadCount: number }) {
+// What the badge number means, for screen readers.
+const badgeMeaning: Record<BadgeKind, string> = { bookings: 'open bookings', notifications: 'unread' };
+
+/** Tab bar from the Figma design: the active icon sits in a blue pill; Bookings and Alerts show count badges. */
+export function BottomTabBar({ state, navigation, insets, counts }: BottomTabBarProps & { counts: Record<BadgeKind, number> }) {
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]} accessibilityRole="tablist">
       {state.routes.map((route, index) => {
         const tab = tabs[route.name];
         if (!tab) return null;
         const focused = state.index === index;
-        const badge = route.name === 'notifications' && unreadCount > 0 ? unreadCount : 0;
+        const count = tab.badge ? counts[tab.badge] : 0;
+        const badge = tab.badge ? { text: badgeLabel(count), spoken: `${count} ${badgeMeaning[tab.badge]}` } : null;
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
@@ -38,7 +45,8 @@ interface TabItemProps {
   label: string;
   icon: IconName;
   focused: boolean;
-  badge: number;
+  /** Badge text ("1", "99+") and its spoken meaning; text is null when the count is zero. */
+  badge: { text: string | null; spoken: string } | null;
   onPress: () => void;
 }
 
@@ -60,7 +68,7 @@ function TabItem({ label, icon, focused, badge, onPress }: TabItemProps) {
       style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
       accessibilityRole="tab"
       accessibilityState={{ selected: focused }}
-      accessibilityLabel={badge ? `${label}, ${badge} unread` : label}>
+      accessibilityLabel={badge?.text ? `${label}, ${badge.spoken}` : label}>
       <View style={styles.iconPill}>
         <Animated.View style={[styles.pillFill, { opacity: progress, transform: [{ scale: pillScale }] }]} />
         <Animated.View style={{ opacity: inactiveOpacity }}>
@@ -69,13 +77,17 @@ function TabItem({ label, icon, focused, badge, onPress }: TabItemProps) {
         <Animated.View style={[styles.iconOverlay, { opacity: progress }]}>
           <Icon name={icon} size={19} color={palette.white} />
         </Animated.View>
-        {badge > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+        {badge?.text ? (
+          <View style={styles.badge} pointerEvents="none">
+            <Text style={styles.badgeText} numberOfLines={1}>
+              {badge.text}
+            </Text>
           </View>
-        )}
+        ) : null}
       </View>
-      <Text style={[styles.label, focused && styles.labelActive]}>{label}</Text>
+      <Text style={[styles.label, focused && styles.labelActive]} numberOfLines={1}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

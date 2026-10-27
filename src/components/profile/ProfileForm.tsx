@@ -50,6 +50,7 @@ export function ProfileForm({ user, onSaved }: { user: User; onSaved: (user: Use
         error={errors.name ?? serverErrors.name}
         autoComplete="name"
         autoCapitalize="words"
+        maxLength={100}
         returnKeyType="next"
         submitBehavior="submit"
         onSubmitEditing={() => focusNextField(phoneRef)}

@@ -31,7 +31,7 @@ const tabs: { key: string; label: string; statuses: BookingStatus[] }[] = [
 export default function RentalHistoryScreen() {
   const router = useRouter();
   const [tab, setTab] = useState('all');
-  const bookings = useBookings('all');
+  const bookings = useBookings();
   useRefetchOnFocus(bookings.refetch);
 
   const all = bookings.data ?? [];

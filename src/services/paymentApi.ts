@@ -1,11 +1,10 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type { Id, UploadFile } from '@/types/api';
 import type { Booking } from '@/types/booking';
 import type { PaymentMethodOption } from '@/types/payment';
 
 import { apiRequest, toFormData, type Resource } from './api';
-import { mockPaymentApi } from './mock/mockBookingApi';
+import { devMocks } from './devMocks';
 
 export interface PaymentApi {
   /** Payment methods ARC currently accepts, with any transfer instructions. */
@@ -26,4 +25,4 @@ const httpPaymentApi: PaymentApi = {
     ).data,
 };
 
-export const paymentApi: PaymentApi = apiConfig.useMockApi ? mockPaymentApi : httpPaymentApi;
+export const paymentApi: PaymentApi = devMocks?.mockPaymentApi ?? httpPaymentApi;

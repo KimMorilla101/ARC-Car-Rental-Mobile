@@ -1,4 +1,3 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type { Id, UploadFile } from '@/types/api';
 import type {
@@ -13,7 +12,7 @@ import type {
 } from '@/types/booking';
 
 import { apiRequest, toFormData, type Resource } from './api';
-import { mockBookingApi } from './mock/mockBookingApi';
+import { devMocks } from './devMocks';
 
 export interface BookingApi {
   list(filter: BookingListFilter): Promise<Booking[]>;
@@ -45,4 +44,4 @@ const httpBookingApi: BookingApi = {
     ).data,
 };
 
-export const bookingApi: BookingApi = apiConfig.useMockApi ? mockBookingApi : httpBookingApi;
+export const bookingApi: BookingApi = devMocks?.mockBookingApi ?? httpBookingApi;

@@ -8,9 +8,9 @@ export const styles = StyleSheet.create({
   image: { width: 64, height: 56, borderRadius: 10 },
   copy: { flex: 1, gap: 3 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name: { color: palette.navy, fontSize: 15, fontFamily: font.bold, flexShrink: 1 },
+  name: { color: palette.navy, fontSize: 14, fontFamily: font.bold, flexShrink: 1 },
   reference: { color: palette.muted, fontSize: 12, fontFamily: font.medium, letterSpacing: 0.5 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   meta: { color: palette.muted, fontSize: 12, fontFamily: font.regular },
-  price: { color: palette.blue, fontSize: 15, fontFamily: font.extrabold, alignSelf: 'flex-end' },
+  price: { color: palette.blue, fontSize: 14, fontFamily: font.bold, alignSelf: 'flex-end' },
 });

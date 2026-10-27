@@ -24,7 +24,7 @@ import { bookingApi } from '@/services/bookingApi';
 import { paymentApi } from '@/services/paymentApi';
 import type { RequirementStatus, RequirementType } from '@/types/booking';
 import { getErrorMessage } from '@/utils/errorHandler';
-import { pickImage } from '@/utils/filePicker';
+import { discardTemporaryFile, pickImage } from '@/utils/filePicker';
 import {
   bookingStatusLabel,
   deliveryMethodLabel,
@@ -68,6 +68,8 @@ export default function BookingDetailsScreen() {
     try {
       const updated = target === 'proof' ? await paymentApi.uploadProof(data.id, picked.file) : await bookingApi.uploadRequirement(data.id, target, picked.file);
       booking.setData(updated);
+      // Only after the server accepted it: remove the app's temporary copy of the document.
+      discardTemporaryFile(picked.file.uri);
     } catch (error) {
       setUploadError(getErrorMessage(error));
     } finally {

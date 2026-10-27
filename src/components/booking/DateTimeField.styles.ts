@@ -8,7 +8,7 @@ export const styles = StyleSheet.create({
   field: { height: 48, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: palette.field, borderRadius: radius.md, borderWidth: 1, borderColor: palette.line, paddingHorizontal: 14 },
   fieldLocked: { backgroundColor: palette.divider },
   fieldError: { borderColor: palette.danger },
-  value: { flex: 1, color: palette.navy, fontSize: 15, fontFamily: font.medium },
+  value: { flex: 1, color: palette.navy, fontSize: 14, fontFamily: font.medium },
   valueLocked: { color: palette.muted },
   error: { color: palette.dangerText, fontSize: 12, fontFamily: font.medium, marginTop: 6 },
   backdrop: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.45)' },

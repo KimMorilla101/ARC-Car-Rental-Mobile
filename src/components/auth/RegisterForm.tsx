@@ -53,7 +53,7 @@ export function RegisterForm() {
   return (
     <View>
       <ErrorMessage message={getFormError(error, FIELDS)} />
-      <FormField label="Full name" icon="user" placeholder="Juan Dela Cruz" value={values.name} onChangeText={update('name')} error={fieldError('name')} autoComplete="name" textContentType="name" autoCapitalize="words" returnKeyType="next" submitBehavior="submit" onSubmitEditing={() => focusNextField(emailRef)} />
+      <FormField label="Full name" icon="user" placeholder="Juan Dela Cruz" value={values.name} onChangeText={update('name')} error={fieldError('name')} autoComplete="name" textContentType="name" autoCapitalize="words" maxLength={100} returnKeyType="next" submitBehavior="submit" onSubmitEditing={() => focusNextField(emailRef)} />
       <FormField
         ref={emailRef}
         label="Email address"
@@ -118,7 +118,7 @@ export function RegisterForm() {
       <Text style={styles.terms}>
         By creating an account, you agree to our <Text style={styles.termsStrong}>Terms of Service</Text> and <Text style={styles.termsStrong}>Privacy Policy</Text>.
       </Text>
-      {apiConfig.useMockApi && (
+      {__DEV__ && apiConfig.useMockApi && (
         <NoticeBox tone="blue">Development mock mode, not real authentication. This test account is kept in memory only and disappears when the app reloads.</NoticeBox>
       )}
     </View>

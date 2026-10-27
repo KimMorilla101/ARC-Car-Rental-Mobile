@@ -15,6 +15,7 @@ export function SearchField(props: Pick<TextInputProps, 'value' | 'onChangeText'
         style={styles.input}
         returnKeyType="search"
         autoCorrect={false}
+        maxLength={100}
         accessibilityLabel={props.placeholder}
       />
     </View>

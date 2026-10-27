@@ -1,5 +1,9 @@
-import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
-import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold, Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
+// Per-weight imports: the package's main entry would bundle every weight and italic (~6 MB).
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display/400Regular';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -44,14 +48,13 @@ export default function RootLayout() {
  */
 function RootNavigator() {
   const { status, retryRestore, signOut } = useAuth();
-  // Figma fonts: DM Serif Display for headings, Outfit for everything else.
+  // DM Serif Display for large titles, Inter for everything else (see `font` in constants/theme.ts).
   const [fontsLoaded, fontError] = useFonts({
     DMSerifDisplay_400Regular,
-    Outfit_400Regular,
-    Outfit_500Medium,
-    Outfit_600SemiBold,
-    Outfit_700Bold,
-    Outfit_800ExtraBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
   // If the fonts fail to load, carry on with system fonts rather than block the app.
   const fontsReady = fontsLoaded || !!fontError;

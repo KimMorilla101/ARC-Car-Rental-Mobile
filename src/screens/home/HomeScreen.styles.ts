@@ -5,7 +5,7 @@ import { palette, font, gutter, tabBarHeight } from '@/constants/theme';
 export const styles = StyleSheet.create({
   scroll: { paddingBottom: tabBarHeight / 2 },
   content: { paddingHorizontal: gutter },
-  welcome: { color: palette.navy, fontSize: 26, fontFamily: font.display, marginTop: 28 },
+  welcome: { color: palette.navy, fontSize: 24, fontFamily: font.display, letterSpacing: -0.3, marginTop: 28 },
   welcomeSub: { color: palette.muted, fontSize: 14, fontFamily: font.regular, marginTop: 4 },
   shortcuts: { flexDirection: 'row', gap: 10, marginTop: 14 },
   shortcut: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: palette.divider, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11 },

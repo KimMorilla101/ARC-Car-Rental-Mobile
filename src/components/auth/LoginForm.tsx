@@ -91,7 +91,7 @@ export function LoginForm() {
           <Text style={styles.link}>Create Account</Text>
         </Pressable>
       </View>
-      {apiConfig.useMockApi && (
+      {__DEV__ && apiConfig.useMockApi && (
         <View style={styles.demo}>
           <Text style={styles.demoText}>Development mock mode, not real authentication. Demo login: juan@example.com / password123</Text>
         </View>

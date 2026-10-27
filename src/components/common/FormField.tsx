@@ -16,9 +16,12 @@ interface FormFieldProps extends Omit<TextInputProps, 'style'> {
 }
 
 /** Labelled input with a leading icon, inline validation message and a show/hide toggle for passwords. */
-export function FormField({ label, icon, error, helper, multiline, secureTextEntry, editable, ref, ...inputProps }: FormFieldProps) {
+export function FormField({ label, icon, error, helper, multiline, secureTextEntry, editable, ref, maxLength, ...inputProps }: FormFieldProps) {
   const [hidden, setHidden] = useState(true);
   const readOnly = editable === false;
+  // Upper bound on what can be typed or pasted, so oversized values never reach the API. Laravel
+  // must enforce its own max lengths too.
+  const limit = maxLength ?? (multiline ? 2000 : secureTextEntry ? 128 : inputProps.keyboardType === 'phone-pad' ? 16 : 255);
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label.toUpperCase()}</Text>
@@ -31,6 +34,7 @@ export function FormField({ label, icon, error, helper, multiline, secureTextEnt
         <TextInput
           {...inputProps}
           ref={ref}
+          maxLength={limit}
           editable={editable}
           multiline={multiline}
           secureTextEntry={secureTextEntry && hidden}

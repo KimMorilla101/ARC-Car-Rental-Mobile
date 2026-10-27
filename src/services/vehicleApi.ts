@@ -1,10 +1,9 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type { Id } from '@/types/api';
 import type { HomeFeed, Vehicle, VehicleFilters } from '@/types/vehicle';
 
 import { apiRequest, type Resource } from './api';
-import { mockVehicleApi } from './mock/mockVehicleApi';
+import { devMocks } from './devMocks';
 
 export interface VehicleList {
   vehicles: Vehicle[];
@@ -27,4 +26,4 @@ const httpVehicleApi: VehicleApi = {
   homeFeed: async () => (await apiRequest<Resource<HomeFeed>>(ENDPOINTS.vehicles.homeFeed)).data,
 };
 
-export const vehicleApi: VehicleApi = apiConfig.useMockApi ? mockVehicleApi : httpVehicleApi;
+export const vehicleApi: VehicleApi = devMocks?.mockVehicleApi ?? httpVehicleApi;

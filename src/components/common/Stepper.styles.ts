@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   circle: { width: 32, height: 32, borderRadius: 16, borderWidth: 1.5, borderColor: palette.line, backgroundColor: palette.white, alignItems: 'center', justifyContent: 'center' },
   circleDone: { backgroundColor: palette.blue, borderColor: palette.blue },
   circleActive: { borderColor: palette.blue },
-  number: { color: palette.mutedLight, fontSize: 13, fontFamily: font.bold },
+  number: { color: palette.mutedLight, fontSize: 13, fontFamily: font.semibold },
   numberActive: { color: palette.blue },
   caption: { color: palette.navy, fontSize: 14, fontFamily: font.bold, marginTop: 10 },
   captionStep: { color: palette.blue },

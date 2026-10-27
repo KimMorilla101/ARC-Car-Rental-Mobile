@@ -1,10 +1,9 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type { Id } from '@/types/api';
 import type { AppNotification } from '@/types/notification';
 
 import { apiRequest, type Resource } from './api';
-import { mockNotificationApi } from './mock/mockNotificationApi';
+import { devMocks } from './devMocks';
 
 export interface NotificationApi {
   list(): Promise<AppNotification[]>;
@@ -18,4 +17,4 @@ const httpNotificationApi: NotificationApi = {
   markAllRead: () => apiRequest<void>(ENDPOINTS.notifications.markAllRead, { method: 'POST' }),
 };
 
-export const notificationApi: NotificationApi = apiConfig.useMockApi ? mockNotificationApi : httpNotificationApi;
+export const notificationApi: NotificationApi = devMocks?.mockNotificationApi ?? httpNotificationApi;

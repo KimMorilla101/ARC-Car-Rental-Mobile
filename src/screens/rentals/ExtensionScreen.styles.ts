@@ -3,12 +3,12 @@ import { StyleSheet } from 'react-native';
 import { palette, font, radius } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
-  label: { color: palette.label, fontSize: 11, fontFamily: font.bold, letterSpacing: 1, marginTop: 22, marginBottom: 10 },
+  label: { color: palette.label, fontSize: 11, fontFamily: font.semibold, letterSpacing: 1, marginTop: 22, marginBottom: 10 },
   types: { flexDirection: 'row', gap: 8 },
   type: { flex: 1, backgroundColor: palette.white, borderWidth: 1.5, borderColor: palette.line, borderRadius: radius.md, padding: 12 },
   typeActive: { backgroundColor: palette.blue, borderColor: palette.blue },
   typeTitle: { color: palette.navy, fontSize: 14, fontFamily: font.bold },
-  typeFee: { color: palette.blue, fontSize: 16, fontFamily: font.extrabold, marginTop: 10 },
+  typeFee: { color: palette.blue, fontSize: 16, fontFamily: font.bold, marginTop: 10 },
   typeUnit: { color: palette.muted, fontSize: 11, fontFamily: font.regular, marginTop: 2 },
   typeTextActive: { color: palette.white },
   typeUnitActive: { color: palette.blueTint },
@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
   submit: { marginTop: 20 },
   returnCard: { backgroundColor: palette.dangerSoft, borderWidth: 1, borderColor: '#FECACA', borderRadius: radius.lg, padding: 16, marginTop: 18 },
   returnHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  returnTitle: { color: palette.dangerText, fontSize: 17, fontFamily: font.bold },
+  returnTitle: { color: palette.dangerText, fontSize: 16, fontFamily: font.bold },
   returnText: { color: '#7F1D1D', fontSize: 13, lineHeight: 20, fontFamily: font.regular, marginTop: 6 },
   returnFees: { backgroundColor: palette.white, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 6, marginTop: 12 },
 });

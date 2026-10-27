@@ -1,4 +1,5 @@
 import * as Device from 'expo-device';
+import { Image } from 'expo-image';
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 
@@ -53,6 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await tokenStorage.clear();
     setUser(null);
     setStatus('signedOut');
+    // Remove cached images (e.g. the profile photo) so the next person on this phone cannot see them.
+    // Best effort: a failure here must not block signing out.
+    await Promise.allSettled([Image.clearMemoryCache(), Image.clearDiskCache()]);
   }, []);
 
   /** Turns a remembered token (or none) into a session by loading the user from the API. */

@@ -1,9 +1,8 @@
-import { apiConfig } from '@/constants/api';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type { AuthResponse, ForgotPasswordPayload, LoginPayload, RegisterPayload, User } from '@/types/auth';
 
 import { apiRequest, type Resource } from './api';
-import { mockAuthApi } from './mock/mockAuthApi';
+import { devMocks } from './devMocks';
 
 export interface AuthApi {
   login(payload: LoginPayload): Promise<AuthResponse>;
@@ -22,4 +21,4 @@ const httpAuthApi: AuthApi = {
   forgotPassword: (payload) => apiRequest<void>(ENDPOINTS.auth.forgotPassword, { method: 'POST', body: payload }),
 };
 
-export const authApi: AuthApi = apiConfig.useMockApi ? mockAuthApi : httpAuthApi;
+export const authApi: AuthApi = devMocks?.mockAuthApi ?? httpAuthApi;

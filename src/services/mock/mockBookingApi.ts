@@ -5,7 +5,7 @@ import type { RentalApi } from '@/services/rentalApi';
 import type { Booking, BookingListFilter, BookingQuotePayload, BookingStatus } from '@/types/booking';
 import type { ExtensionOption, ExtensionType } from '@/types/rental';
 
-import { MOCK_POLICY, mockAgreement, mockBookings, mockLocations, mockPaymentMethods, mockVehicles, priceFor, requirementTemplate } from './mockDb';
+import { MOCK_POLICY, mockAgreement, mockBookings, mockLocations, mockNotifications, mockPaymentMethods, mockVehicles, priceFor, requirementTemplate } from './mockDb';
 import { currentMockUser, mockDelay, mockNotFound, mockValidationError, withoutPrivate } from './mockUtils';
 
 const HOUR = 60 * 60 * 1000;
@@ -113,6 +113,18 @@ export const mockBookingApi: BookingApi = {
       createdAt: new Date().toISOString(),
     };
     mockBookings.push(booking);
+    // Imitates the notification Laravel should create, so the Alerts badge can be tested in
+    // development. Mock-only: this folder is never bundled in release builds.
+    mockNotifications.push({
+      id: Math.max(0, ...mockNotifications.map((item) => Number(item.id))) + 1,
+      userId: user.id,
+      type: 'booking',
+      title: 'Booking Submitted',
+      body: `Your booking ${booking.reference} for the ${vehicle.name} was received. ARC staff will verify your documents and payment.`,
+      bookingId: booking.id,
+      readAt: null,
+      createdAt: new Date().toISOString(),
+    });
     return mockDelay(present(booking), 1000);
   },
 

@@ -49,7 +49,10 @@ export function Button({ label, onPress, variant = 'primary', icon, trailingIcon
   ) : (
     <View style={styles.row}>
       {icon && <Icon name={icon} size={size === 'sm' ? 15 : 17} color={color} />}
-      <Text style={[styles.label, size === 'sm' && styles.labelSmall, { color }]}>{label}</Text>
+      {/* One line on every phone: long labels in narrow buttons shrink slightly instead of wrapping. */}
+      <Text style={[styles.label, size === 'sm' && styles.labelSmall, { color }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+        {label}
+      </Text>
       {trailingIcon && <Icon name={trailingIcon} size={size === 'sm' ? 15 : 17} color={color} />}
     </View>
   );

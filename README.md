@@ -55,6 +55,7 @@ src/
   components/    reusable UI (common/, auth/, dashboard/, vehicles/, booking/, payment/, profile/)
   services/      api.ts (HTTP client, token, 401 handling) + one *Api.ts per feature
     mock/          TEMPORARY mock implementations, only used when EXPO_PUBLIC_USE_MOCK_API=true
+    devMocks.ts    the only file allowed to load mock/; release builds drop it entirely
   context/       AuthContext (session restore, sign in/out)
   hooks/         data hooks (useApiQuery, useVehicles, useBookings, useNotifications, ...)
   types/         API types shared by services and screens
@@ -68,7 +69,8 @@ src/
   Component files contain no `StyleSheet` code and no inline style objects. (React Native can't load `.css` files
   on iOS/Android, so styles are `StyleSheet` objects in TypeScript.)
 - Colours, fonts, radii, shadows and gradients come from `src/constants/theme.ts`, taken from the Figma design.
-  Fonts are DM Serif Display (headings) and Outfit (everything else). Use the `font.*` families instead of `fontWeight`.
+  Fonts are DM Serif Display (large titles) and Inter (everything else). Use the `font.*` families instead of `fontWeight`,
+  and the sizes on the type scale documented in `theme.ts`.
 - Never add style files inside `src/app/`: Expo Router treats every file there as a screen.
 
 ### Connecting a real endpoint
@@ -76,4 +78,12 @@ src/
 1. Set its path in `src/constants/endpoints.ts`. Every entry is `null` until the backend confirms it, and a `null`
    endpoint shows "Not available yet" instead of calling a guessed URL.
 2. Check that the request and response in the matching `src/services/*Api.ts` still match the confirmed contract.
-3. Once every endpoint is live, delete `src/services/mock/` and the mock switch in each `*Api.ts`.
+3. Once every endpoint is live, delete `src/services/mock/`, `src/services/devMocks.ts` and the `devMocks?.` fallback in
+   each `*Api.ts`.
+
+### Mock mode and release builds
+
+Mock data (demo login, TEST CAR, sample payment accounts) exists **only in development builds** (Expo Go, `npx expo start`).
+`src/services/devMocks.ts` loads it inside a `__DEV__` check, which Metro removes from release builds, so EAS preview and
+production builds contain no mock code and always call the real API. A release build with `EXPO_PUBLIC_USE_MOCK_API=true`
+fails every request with a "misconfigured" error instead of showing fake data. Never import `services/mock/` directly.

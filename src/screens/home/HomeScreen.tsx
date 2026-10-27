@@ -32,7 +32,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const feed = useHomeFeed();
-  const bookings = useBookings('all');
+  const bookings = useBookings();
   const notifications = useNotifications();
   useRefetchOnFocus(bookings.refetch);
 

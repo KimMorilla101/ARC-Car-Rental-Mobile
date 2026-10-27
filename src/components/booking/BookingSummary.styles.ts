@@ -9,5 +9,5 @@ export const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: palette.line, marginVertical: 8 },
   balance: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
   balanceLabel: { color: palette.navy, fontSize: 14, fontFamily: font.bold },
-  balanceValue: { color: palette.navy, fontSize: 15, fontFamily: font.extrabold },
+  balanceValue: { color: palette.navy, fontSize: 14, fontFamily: font.bold },
 });

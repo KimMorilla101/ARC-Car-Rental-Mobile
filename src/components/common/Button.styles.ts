@@ -6,8 +6,9 @@ export const styles = StyleSheet.create({
   base: { borderRadius: radius.md + 2, minHeight: 52, overflow: 'visible' },
   small: { minHeight: 42 },
   fill: { flex: 1, minHeight: 52, borderRadius: radius.md + 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  label: { fontFamily: font.bold, fontSize: 15 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' },
+  // flexShrink lets the label give way to the icons in narrow buttons (then it shrinks to fit).
+  label: { fontFamily: font.semibold, fontSize: 16, flexShrink: 1 },
   labelSmall: { fontSize: 13 },
   disabledFilled: { backgroundColor: palette.disabled },
   disabledOutline: { opacity: 0.5 },

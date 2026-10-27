@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
   boxError: { borderColor: palette.danger, backgroundColor: '#FFFBFB' },
   boxReadOnly: { backgroundColor: palette.divider },
   iconTop: { marginTop: 2 },
-  input: { flex: 1, paddingVertical: 13, color: palette.navy, fontSize: 15, fontFamily: font.regular },
+  input: { flex: 1, paddingVertical: 13, color: palette.navy, fontSize: 16, fontFamily: font.regular },
   inputMultiline: { minHeight: 100, paddingVertical: 0, textAlignVertical: 'top' },
   inputReadOnly: { color: palette.muted },
   messageRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },

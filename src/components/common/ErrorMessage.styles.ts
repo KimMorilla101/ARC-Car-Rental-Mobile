@@ -13,7 +13,7 @@ export const styles = StyleSheet.create({
   notice: { flexDirection: 'row', gap: 10, backgroundColor: palette.amberSoft, borderColor: palette.amberBorder, borderWidth: 1, borderRadius: 14, padding: 14, marginTop: 16 },
   noticeBlue: { backgroundColor: palette.blueSoft, borderColor: palette.blueTint },
   noticeCopy: { flex: 1 },
-  noticeTitle: { color: palette.amber, fontSize: 15, fontFamily: font.bold, marginBottom: 4 },
+  noticeTitle: { color: palette.amber, fontSize: 14, fontFamily: font.bold, marginBottom: 4 },
   noticeTitleBlue: { color: palette.blueDark },
   noticeText: { color: palette.amberText, fontSize: 13, lineHeight: 20, fontFamily: font.regular },
   noticeTextBlue: { color: palette.blueDark },

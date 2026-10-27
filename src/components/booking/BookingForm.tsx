@@ -7,7 +7,9 @@ import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { BackLink, PageHeader } from '@/components/common/PageHeader';
 import { Stepper } from '@/components/common/Stepper';
 import { useApiQuery } from '@/hooks/useApiQuery';
+import { useBookings } from '@/hooks/useBookings';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useNotifications } from '@/hooks/useNotifications';
 import { bookingApi } from '@/services/bookingApi';
 import { paymentApi } from '@/services/paymentApi';
 import type { UploadFile } from '@/types/api';
@@ -16,7 +18,7 @@ import type { PaymentMethodOption } from '@/types/payment';
 import type { Vehicle } from '@/types/vehicle';
 import { addDays, defaultPickup, withTimeOf } from '@/utils/bookingDates';
 import { getFieldErrors, getFormError } from '@/utils/errorHandler';
-import { pickImage } from '@/utils/filePicker';
+import { discardTemporaryFile, pickImage } from '@/utils/filePicker';
 
 import { AgreementStep } from './steps/AgreementStep';
 import { BOOKING_STEPS, type BookingDraft, type DraftErrors } from './steps/bookingDraft';
@@ -41,6 +43,8 @@ interface BookingFormProps {
  */
 export function BookingForm({ vehicle, agreement, paymentMethods, locations }: BookingFormProps) {
   const router = useRouter();
+  const sharedBookings = useBookings();
+  const notifications = useNotifications();
   const scrollRef = useRef<ScrollView>(null);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<BookingDraft>(() => ({
@@ -151,18 +155,24 @@ export function BookingForm({ vehicle, agreement, paymentMethods, locations }: B
       // confirmation screen reloads the booking and shows which documents are still missing.
       const uploads = requirements.flatMap((item) => {
         const file = draft.documents[item.type];
-        return file ? [{ label: item.label, run: () => bookingApi.uploadRequirement(booking.id, item.type, file) }] : [];
+        return file ? [{ label: item.label, uri: file.uri, run: () => bookingApi.uploadRequirement(booking.id, item.type, file) }] : [];
       });
       const proof = draft.paymentProof;
-      if (selectedPayment?.requiresProof && proof) uploads.push({ label: 'payment proof', run: () => paymentApi.uploadProof(booking.id, proof) });
+      if (selectedPayment?.requiresProof && proof) uploads.push({ label: 'payment proof', uri: proof.uri, run: () => paymentApi.uploadProof(booking.id, proof) });
       for (const [index, upload] of uploads.entries()) {
         setProgress(`Uploading ${upload.label} (${index + 1}/${uploads.length})…`);
         try {
           await upload.run();
+          // Only after the server accepted it: remove the app's temporary copy of the ID or receipt.
+          discardTemporaryFile(upload.uri);
         } catch {
           // Reported on the confirmation screen from the server's booking state.
         }
       }
+      // Update the navbar badges from the server: the new open booking and any notification it created.
+      // These never throw; a failed refresh keeps the previous counts until the next refresh.
+      sharedBookings.refetch();
+      notifications.refetch();
       router.replace({ pathname: '/booking/[id]/submitted', params: { id: String(booking.id) } });
     } catch (error) {
       setSubmitError(error);
